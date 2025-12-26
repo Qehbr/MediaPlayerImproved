@@ -1,0 +1,24 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "org.forgedRice.plasma.mediacontroller.improved",
+        "Authors": [
+            {
+                "Email": "qehbr@yahoo.com",
+                "Name": "Yuriy Rusanov"
+            }
+        ],
+        "Category": "Multimedia",
+        "Description": "Media player controls",
+        "EnabledByDefault": true,
+        "Icon": "applications-multimedia",
+        "License": "GPL-2.0+",
+        "Name": "Media Player Improved",
+        "Website": "https://www.kde.org/plasma-desktop"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-DBusActivationService": "org.mpris.MediaPlayer2.*",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.multimediacontrols"
+    ]
+}
