@@ -10,7 +10,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
-import plasma.applet.org.kde.plasma.mediacontroller
 import org.kde.plasma.private.mpris as Mpris
 import org.kde.kirigami as Kirigami
 
@@ -20,7 +19,7 @@ PlasmoidItem {
     switchWidth: Kirigami.Units.gridUnit * 14
     switchHeight: Kirigami.Units.gridUnit * 10
 
-    readonly property int volumePercentStep: config.volumeStep
+    readonly property int volumePercentStep: plasmoid.configuration.volumeStep
 
     // BEGIN model properties
     readonly property string track: mpris2Model.currentPlayer?.track ?? ""
@@ -96,10 +95,6 @@ PlasmoidItem {
                 Plasmoid.status = PlasmaCore.Types.PassiveStatus
             }
         }
-    }
-
-    GlobalConfig {
-       id: config
     }
 
     Plasmoid.contextualActions: [
@@ -195,9 +190,5 @@ PlasmoidItem {
 
     Mpris.Mpris2Model {
         id: mpris2Model
-    }
-
-    Component.onCompleted: {
-        Plasmoid.removeInternalAction("configure");
     }
 }

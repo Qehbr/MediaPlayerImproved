@@ -41,7 +41,7 @@ Loader {
         }
     }
 
-    Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * 10 + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
+    Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
 
     enum LayoutType {
         Tray,
@@ -125,7 +125,7 @@ Loader {
         id: playerRow
         GridLayout {
             id: grid
-            readonly property real labelHeight: songTitle.contentHeight
+            readonly property real labelHeight: songTitle.implicitHeight
 
             rowSpacing: Kirigami.Units.smallSpacing
             columnSpacing: rowSpacing
@@ -167,26 +167,35 @@ Loader {
                 Component.onCompleted: albumArt.loadAlbumArt()
             }
 
+            // Visualizer on left
+            AudioVisualizer {
+                id: leftVisualizer
+                Layout.preferredWidth: 30
+                Layout.fillHeight: true
+                visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
+            }
+
             ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: true
+                Layout.maximumWidth: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) : -1
                 visible: compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.VerticalPanel && compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.IconOnly
                     || (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalPanel && compactRepresentation.parent.width >= Kirigami.Units.gridUnit * 5)
 
                 spacing: 0
 
                 // Song Title
-                PC3.Label {
+                ScrollingLabel {
                     id: songTitle
 
                     Layout.fillWidth: true
-                    Layout.maximumWidth: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? Kirigami.Units.gridUnit * 10 : -1
 
                     elide: Text.ElideRight
                     horizontalAlignment: grid.flow === GridLayout.TopToBottom ? Text.AlignHCenter : Text.AlignJustify
                     maximumLineCount: 1
 
-                    opacity: root.isPlaying ? 1 : 0.75
-                    Behavior on opacity {
+                    labelOpacity: root.isPlaying ? 1 : 0.75
+                    Behavior on labelOpacity {
                         NumberAnimation {
                             duration: Kirigami.Units.longDuration
                             easing.type: Easing.InOutQuad
@@ -199,21 +208,37 @@ Loader {
                 }
 
                 // Song Artist
-                PC3.Label {
+                ScrollingLabel {
                     id: songArtist
 
                     Layout.fillWidth: true
-                    visible: root.artist.length > 0 && compactRepresentation.height >= songTitle.contentHeight + contentHeight * 0.8 /* For CJK */ + (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop ? albumArt.height + grid.rowSpacing : 0)
+                    visible: root.artist.length > 0 && compactRepresentation.height >= songTitle.implicitHeight + implicitHeight * 0.8 /* For CJK */ + (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop ? albumArt.height + grid.rowSpacing : 0)
 
                     elide: Text.ElideRight
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     horizontalAlignment: songTitle.horizontalAlignment
                     maximumLineCount: 1
-                    opacity: 0.75
+                    labelOpacity: 0.75
                     text: root.artist
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
                 }
+
+                // Audio Visualizer at bottom
+                AudioVisualizer {
+                    id: bottomVisualizer
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: (plasmoid.configuration.visualizerHeight || 30) / 2
+                    visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
+                }
+            }
+
+            // Visualizer on right
+            AudioVisualizer {
+                id: rightVisualizer
+                Layout.preferredWidth: 30
+                Layout.fillHeight: true
+                visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "right")
             }
 
             Item {

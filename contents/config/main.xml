@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+  <kcfgfile name=""/>
+
+  <group name="General">
+    <entry name="compactMaxWidth" type="Int">
+      <default>20</default>
+      <min>5</min>
+      <max>100</max>
+    </entry>
+    <entry name="enableScrollingText" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="scrollingTextSpeed" type="Int">
+      <default>50</default>
+      <min>10</min>
+      <max>200</max>
+    </entry>
+    <entry name="enableVisualizer" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="visualizerInCompact" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="visualizerPositionCompact" type="String">
+      <default>bottom</default>
+    </entry>
+    <entry name="visualizerInExpanded" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="visualizerHeight" type="Int">
+      <default>30</default>
+      <min>10</min>
+      <max>100</max>
+    </entry>
+    <entry name="visualizerBars" type="Int">
+      <default>20</default>
+      <min>5</min>
+      <max>50</max>
+    </entry>
+    <entry name="visualizerColor" type="String">
+      <default></default>
+    </entry>
+  </group>
+</kcfg>
