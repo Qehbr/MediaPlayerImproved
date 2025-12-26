@@ -41,7 +41,7 @@ Loader {
         }
     }
 
-    Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * 50 + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
+    Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * 10 + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
 
     enum LayoutType {
         Tray,
@@ -179,7 +179,7 @@ Loader {
                     id: songTitle
 
                     Layout.fillWidth: true
-                    Layout.maximumWidth: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? Kirigami.Units.gridUnit * 50 : -1
+                    Layout.maximumWidth: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? Kirigami.Units.gridUnit * 10 : -1
 
                     elide: Text.ElideRight
                     horizontalAlignment: grid.flow === GridLayout.TopToBottom ? Text.AlignHCenter : Text.AlignJustify

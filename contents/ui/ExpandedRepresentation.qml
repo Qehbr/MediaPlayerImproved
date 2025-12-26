@@ -32,8 +32,6 @@ PlasmaExtras.Representation {
 
     collapseMarginsHint: true
 
-    Layout.topMargin: 0
-
     readonly property alias playerSelector: playerSelector
     readonly property int controlSize: Kirigami.Units.iconSizes.medium
 
