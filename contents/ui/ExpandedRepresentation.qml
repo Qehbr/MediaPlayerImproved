@@ -670,6 +670,31 @@ PlasmaExtras.Representation {
                 spacing: Kirigami.Units.smallSpacing
 
                 PlasmaComponents3.ToolButton {
+                    id: openButton
+                    Layout.rightMargin: LayoutMirroring.enabled ? 0 : Kirigami.Units.gridUnit - playerControls.spacing
+                    Layout.leftMargin: LayoutMirroring.enabled ? Kirigami.Units.gridUnit - playerControls.spacing : 0
+                    icon.name: "go-up-symbolic"
+                    icon.width: expandedRepresentation.controlSize
+                    icon.height: expandedRepresentation.controlSize
+                    visible: root.canRaise
+                    enabled: root.canRaise
+
+                    display: PlasmaComponents3.AbstractButton.IconOnly
+                    text: i18nc("Open player window or bring it to the front if already open", "Open")
+
+                    KeyNavigation.right: shuffleButton.enabled ? shuffleButton : shuffleButton.KeyNavigation.right
+                    KeyNavigation.up: playPauseButton.KeyNavigation.up
+
+                    onClicked: {
+                        root.raise()
+                    }
+
+                    PlasmaComponents3.ToolTip {
+                        text: parent.text
+                    }
+                }
+
+                PlasmaComponents3.ToolButton {
                     id: shuffleButton
                     Layout.rightMargin: LayoutMirroring.enabled ? 0 : Kirigami.Units.gridUnit - playerControls.spacing
                     Layout.leftMargin: LayoutMirroring.enabled ? Kirigami.Units.gridUnit - playerControls.spacing : 0
@@ -682,6 +707,7 @@ PlasmaExtras.Representation {
                     display: PlasmaComponents3.AbstractButton.IconOnly
                     text: i18nc("@action:button", "Shuffle")
 
+                    KeyNavigation.left: openButton.enabled ? openButton : openButton.KeyNavigation.left
                     KeyNavigation.right: previousButton.enabled ? previousButton : previousButton.KeyNavigation.right
                     KeyNavigation.up: playPauseButton.KeyNavigation.up
 

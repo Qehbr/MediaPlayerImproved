@@ -13,6 +13,7 @@ import org.kde.kirigami as Kirigami
 KCM.SimpleKCM {
     id: configGeneral
 
+    property alias cfg_volumeStep: volumeStep.value
     property alias cfg_compactMaxWidth: compactMaxWidth.value
     property alias cfg_enableScrollingText: enableScrollingText.checked
     property alias cfg_scrollingTextSpeed: scrollingTextSpeed.value
@@ -26,6 +27,19 @@ KCM.SimpleKCM {
     property alias cfg_visualizerBehindOpacity: visualizerBehindOpacity.value
 
     Kirigami.FormLayout {
+
+        Item {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("General")
+        }
+
+        QQC2.SpinBox {
+            id: volumeStep
+            Kirigami.FormData.label: i18n("Volume adjustment step (%):")
+            from: 1
+            to: 20
+            stepSize: 1
+        }
 
         Item {
             Kirigami.FormData.isSection: true

@@ -6,6 +6,11 @@
   <kcfgfile name=""/>
 
   <group name="General">
+    <entry name="volumeStep" type="Int">
+      <default>5</default>
+      <min>1</min>
+      <max>20</max>
+    </entry>
     <entry name="compactMaxWidth" type="Int">
       <default>20</default>
       <min>5</min>
