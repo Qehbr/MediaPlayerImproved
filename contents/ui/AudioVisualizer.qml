@@ -91,11 +91,13 @@ Item {
     }
 
     // Fade out when not playing
-    OpacityAnimator {
-        target: visualizer
-        from: visualizer.opacity
-        to: visualizer.isPlaying ? 1.0 : 0.3
-        duration: 500
-        running: true
+    // Note: When used in "behind" mode, parent sets a custom opacity which multiplies with this
+    opacity: visualizer.isPlaying ? 1.0 : 0.3
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 500
+            easing.type: Easing.InOutQuad
+        }
     }
 }

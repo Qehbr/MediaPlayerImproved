@@ -175,61 +175,76 @@ Loader {
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
             }
 
-            ColumnLayout {
+            Item {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
                 Layout.maximumWidth: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) : -1
                 visible: compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.VerticalPanel && compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.IconOnly
                     || (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalPanel && compactRepresentation.parent.width >= Kirigami.Units.gridUnit * 5)
 
-                spacing: 0
+                implicitHeight: textColumn.implicitHeight
+                implicitWidth: textColumn.implicitWidth
 
-                // Song Title
-                ScrollingLabel {
-                    id: songTitle
+                // Behind visualizer (rendered first, so it appears behind)
+                AudioVisualizer {
+                    id: behindVisualizer
+                    anchors.fill: parent
+                    visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
+                    opacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
+                }
 
-                    Layout.fillWidth: true
+                ColumnLayout {
+                    id: textColumn
+                    anchors.fill: parent
+                    spacing: 0
 
-                    elide: Text.ElideRight
-                    horizontalAlignment: grid.flow === GridLayout.TopToBottom ? Text.AlignHCenter : Text.AlignJustify
-                    maximumLineCount: 1
+                    // Song Title
+                    ScrollingLabel {
+                        id: songTitle
 
-                    labelOpacity: root.isPlaying ? 1 : 0.75
-                    Behavior on labelOpacity {
-                        NumberAnimation {
-                            duration: Kirigami.Units.longDuration
-                            easing.type: Easing.InOutQuad
+                        Layout.fillWidth: true
+
+                        elide: Text.ElideRight
+                        horizontalAlignment: grid.flow === GridLayout.TopToBottom ? Text.AlignHCenter : Text.AlignJustify
+                        maximumLineCount: 1
+
+                        labelOpacity: root.isPlaying ? 1 : 0.75
+                        Behavior on labelOpacity {
+                            NumberAnimation {
+                                duration: Kirigami.Units.longDuration
+                                easing.type: Easing.InOutQuad
+                            }
                         }
+
+                        text: root.track
+                        textFormat: Text.PlainText
+                        wrapMode: Text.NoWrap  // BUG 491946
                     }
 
-                    text: root.track
-                    textFormat: Text.PlainText
-                    wrapMode: Text.NoWrap  // BUG 491946
-                }
+                    // Song Artist
+                    ScrollingLabel {
+                        id: songArtist
 
-                // Song Artist
-                ScrollingLabel {
-                    id: songArtist
+                        Layout.fillWidth: true
+                        visible: root.artist.length > 0 && compactRepresentation.height >= songTitle.implicitHeight + implicitHeight * 0.8 /* For CJK */ + (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop ? albumArt.height + grid.rowSpacing : 0)
 
-                    Layout.fillWidth: true
-                    visible: root.artist.length > 0 && compactRepresentation.height >= songTitle.implicitHeight + implicitHeight * 0.8 /* For CJK */ + (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop ? albumArt.height + grid.rowSpacing : 0)
+                        elide: Text.ElideRight
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        horizontalAlignment: songTitle.horizontalAlignment
+                        maximumLineCount: 1
+                        labelOpacity: 0.75
+                        text: root.artist
+                        textFormat: Text.PlainText
+                        wrapMode: Text.Wrap
+                    }
 
-                    elide: Text.ElideRight
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    horizontalAlignment: songTitle.horizontalAlignment
-                    maximumLineCount: 1
-                    labelOpacity: 0.75
-                    text: root.artist
-                    textFormat: Text.PlainText
-                    wrapMode: Text.Wrap
-                }
-
-                // Audio Visualizer at bottom
-                AudioVisualizer {
-                    id: bottomVisualizer
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: (plasmoid.configuration.visualizerHeight || 30) / 2
-                    visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
+                    // Audio Visualizer at bottom
+                    AudioVisualizer {
+                        id: bottomVisualizer
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: (plasmoid.configuration.visualizerHeight || 30) / 2
+                        visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
+                    }
                 }
             }
 

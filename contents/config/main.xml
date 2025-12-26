@@ -44,5 +44,10 @@
     <entry name="visualizerColor" type="String">
       <default></default>
     </entry>
+    <entry name="visualizerBehindOpacity" type="Double">
+      <default>0.3</default>
+      <min>0.1</min>
+      <max>1.0</max>
+    </entry>
   </group>
 </kcfg>

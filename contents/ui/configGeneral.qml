@@ -23,6 +23,7 @@ KCM.SimpleKCM {
     property alias cfg_visualizerHeight: visualizerHeight.value
     property alias cfg_visualizerBars: visualizerBars.value
     property string cfg_visualizerColor
+    property alias cfg_visualizerBehindOpacity: visualizerBehindOpacity.value
 
     Kirigami.FormLayout {
 
@@ -78,7 +79,8 @@ KCM.SimpleKCM {
             model: [
                 { text: i18n("Bottom"), value: "bottom" },
                 { text: i18n("Left"), value: "left" },
-                { text: i18n("Right"), value: "right" }
+                { text: i18n("Right"), value: "right" },
+                { text: i18n("Behind text"), value: "behind" }
             ]
             textRole: "text"
             currentIndex: {
@@ -88,6 +90,22 @@ KCM.SimpleKCM {
             }
             onActivated: {
                 configGeneral.cfg_visualizerPositionCompact = model[currentIndex].value
+            }
+        }
+
+        QQC2.Slider {
+            id: visualizerBehindOpacity
+            Kirigami.FormData.label: i18n("Behind opacity:")
+            enabled: enableVisualizer.checked && visualizerInCompact.checked && configGeneral.cfg_visualizerPositionCompact === "behind"
+            from: 0.1
+            to: 1.0
+            stepSize: 0.05
+            live: true
+
+            QQC2.ToolTip {
+                parent: visualizerBehindOpacity.handle
+                visible: visualizerBehindOpacity.pressed
+                text: (visualizerBehindOpacity.value * 100).toFixed(0) + "%"
             }
         }
 
