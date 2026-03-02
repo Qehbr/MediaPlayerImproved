@@ -14,7 +14,8 @@
         "Icon": "applications-multimedia",
         "License": "GPL-2.0+",
         "Name": "Media Player Improved",
-        "Website": "https://www.kde.org/plasma-desktop"
+        "Version": "1.0",
+        "Website": "https://github.com/Qehbr/MediaPlayerImproved"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-DBusActivationService": "org.mpris.MediaPlayer2.*",
