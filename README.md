@@ -72,9 +72,13 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 ## Installation
 
 ### From KDE Store (recommended)
-1. Right-click your panel → **Add or Manage Widgets**
-2. Click **Get New Widgets** → **Download New Plasma Widgets**
-3. Search for **Media Player Improved** and install
+1. Open the [KDE Store page](https://store.kde.org/p/2350283) and download the `.plasmoid` file, **or**
+2. Right-click your panel → **Add or Manage Widgets** → **Get New Widgets** → **Download New Plasma Widgets** → search for **Media Player Improved**
+
+Then install it with:
+```bash
+kpackagetool6 --install MediaPlayerImproved.plasmoid --type Plasma/Applet
+```
 
 ### Manual installation
 ```bash
