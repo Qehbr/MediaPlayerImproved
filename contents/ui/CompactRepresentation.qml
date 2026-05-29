@@ -235,7 +235,9 @@ Loader {
                         labelOpacity: 0.75
                         text: root.artist
                         textFormat: Text.PlainText
-                        wrapMode: Text.Wrap
+                        wrapMode: Text.NoWrap  // match title; a wrapping single-line label
+                                               // under-reports implicitWidth so the column
+                                               // squeezes it and it scrolls needlessly
                     }
 
                     // Audio Visualizer at bottom

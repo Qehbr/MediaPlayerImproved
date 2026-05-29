@@ -15,7 +15,11 @@ Item {
     property alias text: staticLabel.text
     property alias color: staticLabel.color
     property alias font: staticLabel.font
-    property alias elide: staticLabel.elide
+    // The requested elide mode, applied only when scrolling is disabled. While
+    // scrolling is enabled the static label is shown solely in the "fits"
+    // case, so it must never elide (a sub-pixel spillover would otherwise turn
+    // into a full "…"); clip silently hides any residual fraction instead.
+    property int elide: Text.ElideRight
     property alias horizontalAlignment: staticLabel.horizontalAlignment
     property alias verticalAlignment: staticLabel.verticalAlignment
     property alias textFormat: staticLabel.textFormat
@@ -26,25 +30,25 @@ Item {
     property bool enableScrolling: plasmoid.configuration.enableScrollingText !== false
     property int scrollSpeed: plasmoid.configuration.scrollingTextSpeed || 50
 
-    // Use implicitWidth for more reliable detection (QML best practice)
-    readonly property bool needsScrolling: staticLabel.implicitWidth > width && width > 0
+    // Text reports a fractional natural width (e.g. 63.20) but the surrounding
+    // panel layout rounds/quantises when distributing space, so the box ends up
+    // ~2px narrower than the text and it spills over, scrolling (or eliding)
+    // when it actually fits. Reserve a couple of extra whole pixels so the box
+    // is never under-sized, and keep a 1px tolerance on the scroll check to
+    // absorb any residual rounding.
+    readonly property bool needsScrolling: width > 0 && staticLabel.implicitWidth - width > 1
 
     implicitHeight: staticLabel.implicitHeight
-    implicitWidth: staticLabel.implicitWidth
+    implicitWidth: Math.ceil(staticLabel.implicitWidth) + 2
 
     clip: true
-
-    // Debug output
-    onNeedsScrollingChanged: {
-        console.log("ScrollingLabel: needsScrolling =", needsScrolling, "implicitWidth =", staticLabel.implicitWidth, "width =", width, "text =", text)
-    }
 
     PC3.Label {
         id: staticLabel
         anchors.fill: parent
         visible: !scrollingLabel.enableScrolling || !scrollingLabel.needsScrolling
         opacity: scrollingLabel.labelOpacity
-        elide: Text.ElideRight  // Ensure text is elided when not scrolling
+        elide: scrollingLabel.enableScrolling ? Text.ElideNone : scrollingLabel.elide
     }
 
     Item {
