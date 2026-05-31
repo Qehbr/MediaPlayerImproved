@@ -48,6 +48,22 @@ PlasmaExtras.Representation {
     property bool disablePositionUpdate: false
     property bool keyPressed: false
 
+    // keyPressed pauses passive position updates while a key is held for
+    // keyboard seeking, and is normally cleared in Keys.onReleased. If that
+    // release is ever missed (e.g. a shortcut that closed the popup or moved
+    // focus), the flag would stick true and freeze the progress bar. Clear it
+    // whenever the view can't legitimately be holding a key: on losing focus
+    // and each time the popup is (re)opened.
+    onActiveFocusChanged: if (!activeFocus) keyPressed = false
+    Connections {
+        target: root
+        function onExpandedChanged() {
+            if (root.expanded) {
+                expandedRepresentation.keyPressed = false;
+            }
+        }
+    }
+
     KeyNavigation.tab: playerSelector.count ? playerSelector.currentItem : (seekSlider.visible ? seekSlider : seekSlider.KeyNavigation.down)
     KeyNavigation.down: KeyNavigation.tab
 
