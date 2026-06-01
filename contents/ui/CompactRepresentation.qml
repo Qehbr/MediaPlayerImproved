@@ -127,9 +127,76 @@ Loader {
             id: grid
             readonly property real labelHeight: songTitle.implicitHeight
 
+            // Sit above the click-to-expand/scroll MouseArea so the optional
+            // playback buttons can receive clicks; non-interactive parts (art,
+            // text) don't consume events, so they still fall through to it.
+            z: 1
+
+            // Extra controls show everywhere except the system tray and
+            // icon-only mode; placement is driven by the position setting below.
+            readonly property bool extrasAllowed:
+                compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.Tray
+                && compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.IconOnly
+            readonly property bool showControls: extrasAllowed && plasmoid.configuration.compactShowControls === true
+            readonly property bool showProgress: extrasAllowed && plasmoid.configuration.compactShowProgress === true && trackLength > 0
+            readonly property bool extrasVisible: showControls || showProgress
+
+            // Appearance / placement settings
+            readonly property int controlsSize: plasmoid.configuration.compactControlsSize || Kirigami.Units.iconSizes.smallMedium
+            readonly property int progressBarHeight: plasmoid.configuration.compactProgressHeight || 6
+            readonly property color progressColor: plasmoid.configuration.compactProgressColor ? plasmoid.configuration.compactProgressColor : Kirigami.Theme.highlightColor
+            readonly property bool controlsVertical: plasmoid.configuration.compactControlsOrientation === "vertical"
+            readonly property bool progressFirst: plasmoid.configuration.compactProgressFirst !== false
+            readonly property string extrasPosition: plasmoid.configuration.compactExtrasPosition || "auto"
+            // "left"/"top" place the extras before the track, the rest after it
+            readonly property bool extrasBeforeTrack: extrasVisible && (extrasPosition === "left" || extrasPosition === "top")
+            readonly property bool extrasAfterTrack: extrasVisible && !extrasBeforeTrack
+
+            // Read-only position for the progress bar. MPRIS doesn't push
+            // Position updates, so seed from the player and tick locally,
+            // resyncing every few seconds to correct any drift.
+            readonly property double trackLength: mpris2Model.currentPlayer?.length ?? 0
+            readonly property double modelPosition: mpris2Model.currentPlayer?.position ?? 0
+            property double displayPosition: 0
+            onModelPositionChanged: displayPosition = modelPosition
+            onShowProgressChanged: if (showProgress) {
+                mpris2Model.currentPlayer?.updatePosition();
+            }
+
+            Connections {
+                target: root
+                function onTrackChanged() {
+                    grid.displayPosition = 0;
+                    mpris2Model.currentPlayer?.updatePosition();
+                }
+            }
+
+            Timer {
+                interval: 1000
+                repeat: true
+                running: root.isPlaying && grid.showProgress
+                property int ticks: 0
+                onTriggered: {
+                    if (++ticks >= 5) {
+                        ticks = 0;
+                        mpris2Model.currentPlayer?.updatePosition();
+                    } else if (grid.displayPosition < grid.trackLength) {
+                        grid.displayPosition += 1000000;
+                    }
+                }
+            }
+
             rowSpacing: Kirigami.Units.smallSpacing
             columnSpacing: rowSpacing
             flow: {
+                // An explicit extras position overrides the orientation default:
+                // left/right force a row, top/bottom force a column.
+                if (grid.extrasVisible) {
+                    if (grid.extrasPosition === "top" || grid.extrasPosition === "bottom")
+                        return GridLayout.TopToBottom;
+                    if (grid.extrasPosition === "left" || grid.extrasPosition === "right")
+                        return GridLayout.LeftToRight;
+                }
                 switch (compactRepresentation.layoutForm) {
                 case CompactRepresentation.LayoutType.VerticalPanel:
                 case CompactRepresentation.LayoutType.VerticalDesktop:
@@ -143,6 +210,95 @@ Loader {
                 id: spacerItem
                 visible: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop
                 Layout.fillHeight: true
+            }
+
+            // Progress bar + playback controls, defined once and placed either
+            // before or after the track depending on the position setting.
+            Component {
+                id: extrasComponent
+                GridLayout {
+                    columns: 1
+                    rowSpacing: Kirigami.Units.smallSpacing
+                    Layout.alignment: Qt.AlignCenter
+
+                    // Custom-drawn progress bar (lets us control height and color)
+                    Item {
+                        Layout.row: grid.progressFirst ? 0 : 1
+                        Layout.column: 0
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: Kirigami.Units.gridUnit * 3
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 6
+                        Layout.alignment: Qt.AlignVCenter
+                        implicitHeight: grid.progressBarHeight
+                        visible: grid.showProgress
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: height / 2
+                            color: Kirigami.Theme.textColor
+                            opacity: 0.25
+                        }
+                        Rectangle {
+                            height: parent.height
+                            width: parent.width * (grid.trackLength > 0 ? Math.max(0, Math.min(1, grid.displayPosition / grid.trackLength)) : 0)
+                            radius: height / 2
+                            color: grid.progressColor
+                        }
+                    }
+
+                    // Buttons: a single row, or a vertical stack (columns: 1)
+                    GridLayout {
+                        Layout.row: grid.progressFirst ? 1 : 0
+                        Layout.column: 0
+                        Layout.alignment: Qt.AlignHCenter
+                        visible: grid.showControls
+                        columns: grid.controlsVertical ? 1 : 3
+                        rowSpacing: Kirigami.Units.smallSpacing
+                        columnSpacing: Kirigami.Units.smallSpacing
+
+                        PC3.ToolButton {
+                            visible: plasmoid.configuration.compactShowPrevious !== false
+                            icon.name: LayoutMirroring.enabled ? "media-skip-forward" : "media-skip-backward"
+                            icon.width: grid.controlsSize
+                            icon.height: grid.controlsSize
+                            display: PC3.AbstractButton.IconOnly
+                            text: i18nc("Play previous track", "Previous Track")
+                            enabled: root.canGoPrevious
+                            onClicked: root.previous()
+                            PC3.ToolTip { text: parent.text }
+                        }
+                        PC3.ToolButton {
+                            visible: plasmoid.configuration.compactShowPlayPause !== false
+                            icon.name: root.isPlaying ? "media-playback-pause" : "media-playback-start"
+                            icon.width: grid.controlsSize
+                            icon.height: grid.controlsSize
+                            display: PC3.AbstractButton.IconOnly
+                            text: root.isPlaying ? i18nc("Pause playback", "Pause") : i18nc("Start playback", "Play")
+                            enabled: root.isPlaying ? root.canPause : root.canPlay
+                            onClicked: root.togglePlaying()
+                            PC3.ToolTip { text: parent.text }
+                        }
+                        PC3.ToolButton {
+                            visible: plasmoid.configuration.compactShowNext !== false
+                            icon.name: LayoutMirroring.enabled ? "media-skip-backward" : "media-skip-forward"
+                            icon.width: grid.controlsSize
+                            icon.height: grid.controlsSize
+                            display: PC3.AbstractButton.IconOnly
+                            text: i18nc("Play next track", "Next Track")
+                            enabled: root.canGoNext
+                            onClicked: root.next()
+                            PC3.ToolTip { text: parent.text }
+                        }
+                    }
+                }
+            }
+
+            // "Before track" slot (left / top)
+            Loader {
+                Layout.alignment: Qt.AlignCenter
+                active: grid.extrasBeforeTrack
+                visible: active
+                sourceComponent: active ? extrasComponent : null
             }
 
             AlbumArtStackView {
@@ -248,6 +404,14 @@ Loader {
                         visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
                     }
                 }
+            }
+
+            // "After track" slot (right / bottom / automatic)
+            Loader {
+                Layout.alignment: Qt.AlignCenter
+                active: grid.extrasAfterTrack
+                visible: active
+                sourceComponent: active ? extrasComponent : null
             }
 
             // Visualizer on right

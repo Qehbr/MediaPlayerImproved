@@ -24,6 +24,43 @@
       <min>10</min>
       <max>200</max>
     </entry>
+    <entry name="compactShowControls" type="Bool">
+      <default>false</default>
+    </entry>
+    <entry name="compactShowPrevious" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="compactShowPlayPause" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="compactShowNext" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="compactShowProgress" type="Bool">
+      <default>false</default>
+    </entry>
+    <entry name="compactControlsSize" type="Int">
+      <default>22</default>
+      <min>12</min>
+      <max>64</max>
+    </entry>
+    <entry name="compactProgressHeight" type="Int">
+      <default>6</default>
+      <min>2</min>
+      <max>24</max>
+    </entry>
+    <entry name="compactProgressColor" type="String">
+      <default></default>
+    </entry>
+    <entry name="compactExtrasPosition" type="String">
+      <default>auto</default>
+    </entry>
+    <entry name="compactControlsOrientation" type="String">
+      <default>horizontal</default>
+    </entry>
+    <entry name="compactProgressFirst" type="Bool">
+      <default>true</default>
+    </entry>
     <entry name="enableVisualizer" type="Bool">
       <default>true</default>
     </entry>

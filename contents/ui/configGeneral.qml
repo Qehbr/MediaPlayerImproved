@@ -9,6 +9,7 @@ import QtQuick.Layouts
 
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
+import org.kde.kquickcontrols as KQuickControls
 
 KCM.SimpleKCM {
     id: configGeneral
@@ -17,6 +18,17 @@ KCM.SimpleKCM {
     property alias cfg_compactMaxWidth: compactMaxWidth.value
     property alias cfg_enableScrollingText: enableScrollingText.checked
     property alias cfg_scrollingTextSpeed: scrollingTextSpeed.value
+    property alias cfg_compactShowControls: compactShowControls.checked
+    property alias cfg_compactShowPrevious: compactShowPrevious.checked
+    property alias cfg_compactShowPlayPause: compactShowPlayPause.checked
+    property alias cfg_compactShowNext: compactShowNext.checked
+    property alias cfg_compactShowProgress: compactShowProgress.checked
+    property alias cfg_compactControlsSize: compactControlsSize.value
+    property alias cfg_compactProgressHeight: compactProgressHeight.value
+    property string cfg_compactProgressColor
+    property string cfg_compactExtrasPosition
+    property string cfg_compactControlsOrientation
+    property alias cfg_compactProgressFirst: compactProgressFirst.checked
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerInCompact: visualizerInCompact.checked
     property string cfg_visualizerPositionCompact
@@ -67,6 +79,125 @@ KCM.SimpleKCM {
             from: 10
             to: 200
             stepSize: 10
+        }
+
+        QQC2.CheckBox {
+            id: compactShowControls
+            Kirigami.FormData.label: i18n("Playback controls:")
+            text: i18n("Show playback buttons in compact view")
+        }
+
+        QQC2.CheckBox {
+            id: compactShowPrevious
+            enabled: compactShowControls.checked
+            text: i18n("Previous track button")
+        }
+
+        QQC2.CheckBox {
+            id: compactShowPlayPause
+            enabled: compactShowControls.checked
+            text: i18n("Play / pause button")
+        }
+
+        QQC2.CheckBox {
+            id: compactShowNext
+            enabled: compactShowControls.checked
+            text: i18n("Next track button")
+        }
+
+        QQC2.SpinBox {
+            id: compactControlsSize
+            Kirigami.FormData.label: i18n("Button icon size (px):")
+            enabled: compactShowControls.checked
+            from: 12
+            to: 64
+            stepSize: 2
+        }
+
+        QQC2.CheckBox {
+            id: compactShowProgress
+            Kirigami.FormData.label: i18n("Progress bar:")
+            text: i18n("Show track progress in compact view")
+        }
+
+        QQC2.SpinBox {
+            id: compactProgressHeight
+            Kirigami.FormData.label: i18n("Progress bar height (px):")
+            enabled: compactShowProgress.checked
+            from: 2
+            to: 24
+            stepSize: 1
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Progress bar color:")
+            enabled: compactShowProgress.checked
+
+            KQuickControls.ColorButton {
+                id: progressColorButton
+                enabled: !progressThemeColor.checked
+                showAlphaChannel: false
+                dialogTitle: i18n("Select Progress Bar Color")
+                color: configGeneral.cfg_compactProgressColor ? configGeneral.cfg_compactProgressColor : Kirigami.Theme.highlightColor
+                onAccepted: {
+                    progressThemeColor.checked = false;
+                    configGeneral.cfg_compactProgressColor = color;
+                }
+            }
+            QQC2.CheckBox {
+                id: progressThemeColor
+                text: i18n("Use theme default")
+                checked: !configGeneral.cfg_compactProgressColor
+                onToggled: configGeneral.cfg_compactProgressColor = checked ? "" : progressColorButton.color
+            }
+        }
+
+        QQC2.ComboBox {
+            id: compactExtrasPosition
+            Kirigami.FormData.label: i18n("Controls position:")
+            enabled: compactShowControls.checked || compactShowProgress.checked
+            model: [
+                { text: i18n("Automatic"), value: "auto" },
+                { text: i18n("Left of track"), value: "left" },
+                { text: i18n("Right of track"), value: "right" },
+                { text: i18n("Above track"), value: "top" },
+                { text: i18n("Below track"), value: "bottom" }
+            ]
+            textRole: "text"
+            currentIndex: {
+                const pos = configGeneral.cfg_compactExtrasPosition
+                const idx = model.findIndex(item => item.value === pos)
+                return idx >= 0 ? idx : 0
+            }
+            onActivated: {
+                configGeneral.cfg_compactExtrasPosition = model[currentIndex].value
+            }
+        }
+
+        QQC2.ComboBox {
+            id: compactControlsOrientation
+            Kirigami.FormData.label: i18n("Button layout:")
+            enabled: compactShowControls.checked
+            model: [
+                { text: i18n("Horizontal"), value: "horizontal" },
+                { text: i18n("Vertical"), value: "vertical" }
+            ]
+            textRole: "text"
+            currentIndex: {
+                const v = configGeneral.cfg_compactControlsOrientation
+                const idx = model.findIndex(item => item.value === v)
+                return idx >= 0 ? idx : 0
+            }
+            onActivated: {
+                configGeneral.cfg_compactControlsOrientation = model[currentIndex].value
+            }
+        }
+
+        QQC2.CheckBox {
+            id: compactProgressFirst
+            Kirigami.FormData.label: i18n("Block order:")
+            text: i18n("Progress bar above controls")
+            enabled: compactShowProgress.checked && compactShowControls.checked
         }
 
         Item {
@@ -147,65 +278,26 @@ KCM.SimpleKCM {
             stepSize: 5
         }
 
-        QQC2.Button {
-            id: colorButton
+        RowLayout {
             Kirigami.FormData.label: i18n("Bar color:")
             enabled: enableVisualizer.checked
 
-            readonly property color currentColor: configGeneral.cfg_visualizerColor ? configGeneral.cfg_visualizerColor : Kirigami.Theme.highlightColor
-
-            contentItem: Rectangle {
-                implicitWidth: Kirigami.Units.gridUnit * 4
-                implicitHeight: Kirigami.Units.gridUnit * 1.5
-                color: colorButton.currentColor
-                border.color: Kirigami.Theme.textColor
-                border.width: 1
-                radius: 3
-
-                QQC2.Label {
-                    anchors.centerIn: parent
-                    text: configGeneral.cfg_visualizerColor ? configGeneral.cfg_visualizerColor : i18n("Theme default")
-                    color: {
-                        // Contrast check for text visibility
-                        var c = colorButton.currentColor
-                        var brightness = (c.r * 299 + c.g * 587 + c.b * 114) / 1000
-                        return brightness > 0.5 ? "black" : "white"
-                    }
+            KQuickControls.ColorButton {
+                id: visualizerColorButton
+                enabled: !visualizerThemeColor.checked
+                showAlphaChannel: false
+                dialogTitle: i18n("Select Bar Color")
+                color: configGeneral.cfg_visualizerColor ? configGeneral.cfg_visualizerColor : Kirigami.Theme.highlightColor
+                onAccepted: {
+                    visualizerThemeColor.checked = false;
+                    configGeneral.cfg_visualizerColor = color;
                 }
             }
-
-            onClicked: colorDialog.open()
-
-            QQC2.Menu {
-                id: colorDialog
-                QQC2.MenuItem {
-                    text: i18n("Use theme color")
-                    onClicked: configGeneral.cfg_visualizerColor = ""
-                }
-                QQC2.MenuItem {
-                    text: i18n("Red")
-                    onClicked: configGeneral.cfg_visualizerColor = "#e74c3c"
-                }
-                QQC2.MenuItem {
-                    text: i18n("Green")
-                    onClicked: configGeneral.cfg_visualizerColor = "#2ecc71"
-                }
-                QQC2.MenuItem {
-                    text: i18n("Blue")
-                    onClicked: configGeneral.cfg_visualizerColor = "#3498db"
-                }
-                QQC2.MenuItem {
-                    text: i18n("Purple")
-                    onClicked: configGeneral.cfg_visualizerColor = "#9b59b6"
-                }
-                QQC2.MenuItem {
-                    text: i18n("Orange")
-                    onClicked: configGeneral.cfg_visualizerColor = "#e67e22"
-                }
-                QQC2.MenuItem {
-                    text: i18n("Yellow")
-                    onClicked: configGeneral.cfg_visualizerColor = "#f1c40f"
-                }
+            QQC2.CheckBox {
+                id: visualizerThemeColor
+                text: i18n("Use theme default")
+                checked: !configGeneral.cfg_visualizerColor
+                onToggled: configGeneral.cfg_visualizerColor = checked ? "" : visualizerColorButton.color
             }
         }
     }
