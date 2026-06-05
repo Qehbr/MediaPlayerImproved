@@ -67,7 +67,7 @@ PlasmaExtras.Representation {
     KeyNavigation.tab: playerSelector.count ? playerSelector.currentItem : (seekSlider.visible ? seekSlider : seekSlider.KeyNavigation.down)
     KeyNavigation.down: KeyNavigation.tab
 
-    function isForwardArrowKey(key: int) : bool {
+    function isForwardArrowKey(key) {
         return ((key === Qt.Key_Right && Application.layoutDirection === Qt.LeftToRight)
             ||  (key === Qt.Key_Left  && Application.layoutDirection === Qt.RightToLeft))
     }
@@ -530,7 +530,7 @@ PlasmaExtras.Representation {
 
                         // Don't update position during hide animation,
                         // "visible" only becomes false once the exit animation finishes.
-                        function updateIndicatedPosition(): void {
+                        function updateIndicatedPosition() {
                             if (shouldBeVisible) {
                                 indicatedPosition = position;
                             }
@@ -606,7 +606,7 @@ PlasmaExtras.Representation {
                     enabled: root.minimumPlaybackRate <= 0.75 || root.maximumPlaybackRate >= 1.25
                     Accessible.name: i18n("Playback rate %1", text)
 
-                    function formatPlaybackRate(rate : real) : string {
+                    function formatPlaybackRate(rate) {
                         return i18nc("Playback rate", "%1x", Math.round(rate * 100) / 100)
                     }
 
@@ -869,7 +869,7 @@ PlasmaExtras.Representation {
             onCurrentIndexChanged: setCurrentIndex(mpris2Model.currentIndex)
 
             // immediately update content on arrow key press the way other plasmoids do (e.g. weather, volume)
-            function handleArrows(event: KeyEvent): void {
+            function handleArrows(event) {
                 if (expandedRepresentation.isForwardArrowKey(event.key)) {
                     mpris2Model.currentIndex = Math.min(currentIndex+1, count-1)
                 } else {

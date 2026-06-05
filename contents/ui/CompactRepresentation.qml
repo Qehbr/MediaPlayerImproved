@@ -70,7 +70,13 @@ Loader {
     readonly property bool inPanel: [PlasmaCore.Types.TopEdge, PlasmaCore.Types.RightEdge, PlasmaCore.Types.BottomEdge, PlasmaCore.Types.LeftEdge].includes(Plasmoid.location)
     readonly property bool inTray: parent.objectName === "org.kde.desktop-CompactApplet"
 
-    sourceComponent: inTray || root.track.length === 0 ? icon : playerRow
+    sourceComponent: {
+        if (root.track.length === 0) {
+            // Nothing playing: optionally show nothing at all instead of an icon.
+            return plasmoid.configuration.hideWhenIdle ? null : icon;
+        }
+        return inTray ? icon : playerRow;
+    }
 
     MouseArea {
         id: mouseArea

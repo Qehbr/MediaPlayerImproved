@@ -13,6 +13,7 @@ import QtQuick.Controls
 import org.kde.plasma.components as PC3
 import org.kde.plasma.extras as PlasmaExtras
 import org.kde.plasma.private.mpris as Mpris
+import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
 
 Item {
@@ -38,7 +39,7 @@ Item {
 
     property Image pendingImage: null
 
-    function loadAlbumArt(): void {
+    function loadAlbumArt() {
         if (pendingImage !== null) {
             pendingImage.destroy();
             pendingImage = null;
@@ -56,7 +57,7 @@ Item {
             "opacity": 0,
         });
 
-        function replaceWhenLoaded(): void {
+        function replaceWhenLoaded() {
             // HACK: Workaround for QTBUG-140018 (see also: BUG 509192)
             // When a parent loader is inactive, it'll drop the engine from the context, but this can still run
             // afterwards which causes a crash in QQuickStackElement::initialize which asserts the engine is not null.
@@ -114,7 +115,7 @@ Item {
 
         anchors.fill: parent
 
-        readonly property string icon: root.iconName || "media-album-cover"
+        readonly property string icon: root.iconName || plasmoid.configuration.noArtworkIcon || "applications-multimedia"
 
         replaceEnter: Transition {
             OpacityAnimator {

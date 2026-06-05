@@ -16,6 +16,12 @@
       <min>5</min>
       <max>100</max>
     </entry>
+    <entry name="hideWhenIdle" type="Bool">
+      <default>false</default>
+    </entry>
+    <entry name="noArtworkIcon" type="String">
+      <default>applications-multimedia</default>
+    </entry>
     <entry name="enableScrollingText" type="Bool">
       <default>true</default>
     </entry>

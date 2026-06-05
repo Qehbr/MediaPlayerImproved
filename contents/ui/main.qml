@@ -52,7 +52,13 @@ PlasmoidItem {
     default:
         return "media-playback-stopped-symbolic";
     }
-    Plasmoid.status: PlasmaCore.Types.PassiveStatus
+    // When idle, either sit passively in the panel (default) or hide entirely.
+    readonly property int idleStatus: plasmoid.configuration.hideWhenIdle ? PlasmaCore.Types.HiddenStatus : PlasmaCore.Types.PassiveStatus
+    Plasmoid.status: root.idleStatus
+    // Re-apply when the setting is toggled while already idle.
+    onIdleStatusChanged: if (root.playbackStatus <= Mpris.PlaybackStatus.Stopped) {
+        Plasmoid.status = root.idleStatus;
+    }
     toolTipMainText: root.playbackStatus > Mpris.PlaybackStatus.Stopped ? root.track : i18n("No media playing")
     toolTipSubText: switch (root.playbackStatus) {
     case Mpris.PlaybackStatus.Playing:
@@ -92,7 +98,7 @@ PlasmoidItem {
             if (root.playbackStatus > Mpris.PlaybackStatus.Stopped) {
                 Plasmoid.status = PlasmaCore.Types.ActiveStatus
             } else {
-                Plasmoid.status = PlasmaCore.Types.PassiveStatus
+                Plasmoid.status = root.idleStatus
             }
         }
     }
@@ -159,32 +165,32 @@ PlasmoidItem {
         }
     ]
 
-    function previous(): void {
+    function previous() {
         mpris2Model.currentPlayer.Previous();
     }
-    function next(): void {
+    function next() {
         mpris2Model.currentPlayer.Next();
     }
-    function play(): void {
+    function play() {
         mpris2Model.currentPlayer.Play();
     }
-    function pause(): void {
+    function pause() {
         mpris2Model.currentPlayer.Pause();
     }
-    function togglePlaying(): void {
+    function togglePlaying() {
         if (root.isPlaying) {
             mpris2Model.currentPlayer.Pause();
         } else {
             mpris2Model.currentPlayer.Play();
         }
     }
-    function stop(): void {
+    function stop() {
         mpris2Model.currentPlayer.Stop();
     }
-    function quit(): void {
+    function quit() {
         mpris2Model.currentPlayer.Quit();
     }
-    function raise(): void {
+    function raise() {
         mpris2Model.currentPlayer.Raise();
     }
 
