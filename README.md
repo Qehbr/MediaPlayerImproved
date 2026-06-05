@@ -12,8 +12,8 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - Animated frequency bars that react to playback state
 - Visible in both the compact (panel) and expanded (popup) views
 - Four position options in compact mode: **Bottom**, **Left**, **Right**, or **Behind** text
-- Configurable bar count (5–50), height (10–100 px), and color
-- 7 color presets plus theme default: Red, Green, Blue, Purple, Orange, Yellow
+- Configurable bar count (5–50) and height (10–100 px)
+- Full color picker for the bars (or theme default)
 - "Behind" mode renders bars beneath the text with adjustable opacity for a subtle depth effect
 - Bars fade when paused and animate smoothly when playing
 
@@ -27,6 +27,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - Configurable maximum width for the compact panel widget (5–100 grid units)
 - Album art with smooth transitions between tracks
 - Blurred album art background in the expanded view
+- Customizable placeholder icon shown when a track has no album art
 - Responsive layout that adapts to horizontal panels, vertical panels, and desktop placement
 
 ### Expanded View (Popup)
@@ -40,7 +41,10 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 
 ### Compact View (Panel)
 - Album art + title/artist side by side
-- Back and forward track buttons
+- Optional on-widget playback controls — **Previous / Play-Pause / Next**, each individually toggleable, with configurable icon size
+- Optional read-only **progress bar** with configurable height and color
+- Fully arrangeable extras: position them **left / right / above / below** the track, lay the buttons out as a **row or a vertical stack**, and put the progress bar **above or below** the buttons
+- Optionally **hide the widget entirely** when nothing is playing
 - Middle-click to play/pause
 - Scroll wheel to adjust volume
 - Mouse back/forward buttons for track navigation
@@ -111,6 +115,8 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Volume step | 5% | How much each scroll tick changes volume (1–20%) |
+| Hide when idle | Disabled | Hide the widget entirely when nothing is playing |
+| No-artwork icon | `applications-multimedia` | Icon shown when a track has no album art |
 
 ### Compact Representation
 | Setting | Default | Description |
@@ -118,6 +124,15 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Maximum width | 20 | Max widget width in grid units (5–100) |
 | Scrolling text | Enabled | Marquee animation for long text |
 | Scroll speed | 50 px/s | Text scroll speed (10–200) |
+| Playback controls | Disabled | Show Previous / Play-Pause / Next buttons |
+| Previous / Play-Pause / Next | Enabled | Toggle each button individually |
+| Button icon size | 22 px | Control button icon size (12–64) |
+| Progress bar | Disabled | Show a read-only track progress bar |
+| Progress bar height | 6 px | Progress bar thickness (2–24) |
+| Progress bar color | Theme default | Full color picker or theme default |
+| Controls position | Automatic | Auto / Left / Right / Above / Below the track |
+| Button layout | Horizontal | Buttons in a row or a vertical stack |
+| Block order | Progress above | Progress bar above or below the controls |
 
 ### Audio Visualizer
 | Setting | Default | Description |
@@ -128,7 +143,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Show in expanded view | Enabled | Visualizer in the popup |
 | Height | 30 px | Bar height in pixels (10–100) |
 | Number of bars | 20 | Bar count (5–50) |
-| Bar color | Theme default | Hex color or one of 7 presets |
+| Bar color | Theme default | Full color picker or theme default |
 | Behind opacity | 0.3 | Opacity when using "Behind" position (0.1–1.0) |
 
 ---
