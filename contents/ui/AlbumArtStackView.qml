@@ -161,6 +161,7 @@ Item {
             id: albumArtComponent
 
             Image { // Album Art
+                id: albumArtImage
                 horizontalAlignment: Image.AlignHCenter
                 verticalAlignment: Image.AlignVCenter
                 fillMode: container.inCompactRepresentation ? Image.PreserveAspectCrop : Image.PreserveAspectFit
@@ -172,6 +173,20 @@ Item {
                 // Given it's such a heavy item, try to cleanup as early as possible
                 StackView.onDeactivated: destroy()
                 StackView.onRemoved: destroy()
+
+                // Safety net for QTBUG-119904: when the StackView isn't visible at
+                // the moment the artwork is swapped in (e.g. Spotify delivers its
+                // art during shell startup), the opacity enter-transition is skipped
+                // and the image stays invisible — a blank square. If it hasn't faded
+                // in shortly after loading, force it visible.
+                onStatusChanged: if (status === Image.Ready) opacityFixTimer.restart()
+                Timer {
+                    id: opacityFixTimer
+                    interval: Kirigami.Units.longDuration + 50
+                    onTriggered: if (albumArtImage.opacity < 1) {
+                        albumArtImage.opacity = 1;
+                    }
+                }
             }
         }
 

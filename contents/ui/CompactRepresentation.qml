@@ -72,8 +72,9 @@ Loader {
 
     sourceComponent: {
         if (root.track.length === 0) {
-            // Nothing playing: optionally show nothing at all instead of an icon.
-            return plasmoid.configuration.hideWhenIdle ? null : icon;
+            // No player running at all: optionally show nothing instead of an icon.
+            // If a player is open but idle, keep the icon so it can be controlled.
+            return (plasmoid.configuration.hideWhenIdle && mpris2Model.currentPlayer === null) ? null : icon;
         }
         return inTray ? icon : playerRow;
     }

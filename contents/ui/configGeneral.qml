@@ -57,8 +57,8 @@ KCM.SimpleKCM {
 
         QQC2.CheckBox {
             id: hideWhenIdle
-            Kirigami.FormData.label: i18n("When idle:")
-            text: i18n("Hide the widget when nothing is playing")
+            Kirigami.FormData.label: i18n("Visibility:")
+            text: i18n("Hide the widget when no media player is running")
         }
 
         QQC2.TextField {
