@@ -70,6 +70,9 @@
     <entry name="enableVisualizer" type="Bool">
       <default>true</default>
     </entry>
+    <entry name="visualizerUseRealAudio" type="Bool">
+      <default>false</default>
+    </entry>
     <entry name="visualizerInCompact" type="Bool">
       <default>true</default>
     </entry>

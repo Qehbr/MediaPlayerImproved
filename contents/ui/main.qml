@@ -52,18 +52,12 @@ PlasmoidItem {
     default:
         return "media-playback-stopped-symbolic";
     }
-    // With "hide when idle" on: hide entirely only when no media player is
-    // running; if one is open (even stopped), stay fully Active so it remains
-    // usable everywhere — including the System Tray, where PassiveStatus would
-    // tuck it into the popup. With the option off, behave as before (passive
-    // when stopped).
+    // With "hide when idle" on, hide entirely only when no media player is
+    // running; otherwise behave normally (passive when stopped, active when
+    // playing) so an open player stays available in the panel.
     readonly property bool hasActivePlayer: mpris2Model.currentPlayer !== null
-    readonly property int idleStatus: {
-        if (plasmoid.configuration.hideWhenIdle) {
-            return root.hasActivePlayer ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus;
-        }
-        return PlasmaCore.Types.PassiveStatus;
-    }
+    readonly property int idleStatus: (plasmoid.configuration.hideWhenIdle && !root.hasActivePlayer)
+        ? PlasmaCore.Types.HiddenStatus : PlasmaCore.Types.PassiveStatus
     Plasmoid.status: root.idleStatus
     // Re-apply when the player appears/disappears or the setting is toggled while idle.
     onIdleStatusChanged: if (root.playbackStatus <= Mpris.PlaybackStatus.Stopped) {

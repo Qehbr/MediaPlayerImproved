@@ -9,7 +9,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 ## Features
 
 ### Audio Visualizer
-- Animated frequency bars that react to playback state
+- Animated frequency bars, with an optional **real audio-reactive** mode powered by [`cava`](https://github.com/karlstav/cava) (falls back to a simple animation if cava isn't installed)
 - Visible in both the compact (panel) and expanded (popup) views
 - Four position options in compact mode: **Bottom**, **Left**, **Right**, or **Behind** text
 - Configurable bar count (5–50) and height (10–100 px)
@@ -70,6 +70,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - KDE Plasma **6.0** or later
 - Qt 6 with QtQuick, QtQuick.Layouts, QtQuick.Controls, Qt5Compat.GraphicalEffects
 - An MPRIS2-compatible media player
+- *Optional:* [`cava`](https://github.com/karlstav/cava) for the real audio-reactive visualizer mode
 
 ---
 
@@ -138,6 +139,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Enable visualizer | Enabled | Master on/off toggle |
+| React to real audio | Disabled | Use `cava` for real frequency analysis (requires cava); falls back to the animation otherwise |
 | Show in compact view | Enabled | Visualizer in the panel widget |
 | Position (compact) | Bottom | Bottom / Left / Right / Behind |
 | Show in expanded view | Enabled | Visualizer in the popup |

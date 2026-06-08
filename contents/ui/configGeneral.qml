@@ -32,6 +32,7 @@ KCM.SimpleKCM {
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
     property alias cfg_enableVisualizer: enableVisualizer.checked
+    property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
     property alias cfg_visualizerInCompact: visualizerInCompact.checked
     property string cfg_visualizerPositionCompact
     property alias cfg_visualizerInExpanded: visualizerInExpanded.checked
@@ -226,6 +227,13 @@ KCM.SimpleKCM {
             id: enableVisualizer
             Kirigami.FormData.label: i18n("Enable visualizer:")
             text: i18n("Show audio frequency bars")
+        }
+
+        QQC2.CheckBox {
+            id: visualizerUseRealAudio
+            Kirigami.FormData.label: i18n("Audio source:")
+            enabled: enableVisualizer.checked
+            text: i18n("React to real audio (requires cava)")
         }
 
         QQC2.CheckBox {
