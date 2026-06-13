@@ -146,7 +146,6 @@ Loader {
                 && compactRepresentation.layoutForm !== CompactRepresentation.LayoutType.IconOnly
             readonly property bool showControls: extrasAllowed && plasmoid.configuration.compactShowControls === true
             readonly property bool showProgress: extrasAllowed && plasmoid.configuration.compactShowProgress === true && trackLength > 0
-            readonly property bool extrasVisible: showControls || showProgress
 
             // Appearance / placement settings
             readonly property int controlsSize: plasmoid.configuration.compactControlsSize || Kirigami.Units.iconSizes.smallMedium
@@ -154,16 +153,24 @@ Loader {
             readonly property color progressColor: plasmoid.configuration.compactProgressColor ? plasmoid.configuration.compactProgressColor : Kirigami.Theme.highlightColor
             readonly property bool controlsVertical: plasmoid.configuration.compactControlsOrientation === "vertical"
             readonly property bool progressFirst: plasmoid.configuration.compactProgressFirst !== false
-            readonly property string extrasPosition: plasmoid.configuration.compactExtrasPosition || "auto"
-            // Left/right (and automatic) place the extras as a sibling of the
-            // album art so the grid's natural orientation keeps the artwork
-            // sized correctly. Top/bottom stack the extras with the text inside
-            // its own cell, again leaving the artwork untouched. We never force
-            // the grid flow, which is what used to collapse the album art.
-            readonly property bool extrasSiblingBefore: extrasVisible && extrasPosition === "left"
-            readonly property bool extrasSiblingAfter: extrasVisible && (extrasPosition === "right" || extrasPosition === "auto")
-            readonly property bool extrasTextTop: extrasVisible && extrasPosition === "top"
-            readonly property bool extrasTextBottom: extrasVisible && extrasPosition === "bottom"
+            // Controls and progress bar are positioned independently. Each maps
+            // to one of four slots; left/right/auto sit beside the album art
+            // (natural flow keeps the artwork sized right), top/bottom stack
+            // inside the text cell. The grid flow is never forced.
+            readonly property string controlsPosition: plasmoid.configuration.compactControlsPosition || "auto"
+            readonly property string progressPosition: plasmoid.configuration.compactProgressPosition || "auto"
+            function slotForPos(pos) {
+                switch (pos) {
+                case "left": return "before";
+                case "top": return "texttop";
+                case "bottom": return "textbottom";
+                default: return "after"; // "right" and "auto"
+                }
+            }
+            function slotActive(slot) {
+                return (showProgress && slotForPos(progressPosition) === slot)
+                    || (showControls && slotForPos(controlsPosition) === slot);
+            }
 
             // Read-only position for the progress bar. MPRIS doesn't push
             // Position updates, so seed from the player and tick locally,
@@ -222,6 +229,14 @@ Loader {
             Component {
                 id: extrasComponent
                 GridLayout {
+                    id: block
+                    // Which slot this block instance occupies (set by its Loader).
+                    property string slot: ""
+                    // Show each part only if its configured position maps here.
+                    readonly property bool wantProgress: grid.showProgress && grid.slotForPos(grid.progressPosition) === slot
+                    readonly property bool wantControls: grid.showControls && grid.slotForPos(grid.controlsPosition) === slot
+                    visible: wantProgress || wantControls
+
                     columns: 1
                     rowSpacing: Kirigami.Units.smallSpacing
                     Layout.alignment: Qt.AlignCenter
@@ -235,7 +250,7 @@ Loader {
                         Layout.preferredWidth: Kirigami.Units.gridUnit * 6
                         Layout.alignment: Qt.AlignVCenter
                         implicitHeight: grid.progressBarHeight
-                        visible: grid.showProgress
+                        visible: block.wantProgress
 
                         Rectangle {
                             anchors.fill: parent
@@ -256,7 +271,7 @@ Loader {
                         Layout.row: grid.progressFirst ? 1 : 0
                         Layout.column: 0
                         Layout.alignment: Qt.AlignHCenter
-                        visible: grid.showControls
+                        visible: block.wantControls
                         columns: grid.controlsVertical ? 1 : 3
                         rowSpacing: Kirigami.Units.smallSpacing
                         columnSpacing: Kirigami.Units.smallSpacing
@@ -301,9 +316,10 @@ Loader {
             // "Left of track" slot (sibling before the album art)
             Loader {
                 Layout.alignment: Qt.AlignCenter
-                active: grid.extrasSiblingBefore
+                active: grid.slotActive("before")
                 visible: active
                 sourceComponent: active ? extrasComponent : null
+                onLoaded: item.slot = "before"
             }
 
             AlbumArtStackView {
@@ -363,9 +379,10 @@ Loader {
                     // album art (a separate grid cell) at its natural size.
                     Loader {
                         Layout.fillWidth: true
-                        active: grid.extrasTextTop
+                        active: grid.slotActive("texttop")
                         visible: active
                         sourceComponent: active ? extrasComponent : null
+                        onLoaded: item.slot = "texttop"
                     }
 
                     // Song Title
@@ -413,9 +430,10 @@ Loader {
                     // "Below track" slot — stacked with the text.
                     Loader {
                         Layout.fillWidth: true
-                        active: grid.extrasTextBottom
+                        active: grid.slotActive("textbottom")
                         visible: active
                         sourceComponent: active ? extrasComponent : null
+                        onLoaded: item.slot = "textbottom"
                     }
 
                     // Audio Visualizer at bottom
@@ -433,9 +451,10 @@ Loader {
             // layouts and below in vertical ones).
             Loader {
                 Layout.alignment: Qt.AlignCenter
-                active: grid.extrasSiblingAfter
+                active: grid.slotActive("after")
                 visible: active
                 sourceComponent: active ? extrasComponent : null
+                onLoaded: item.slot = "after"
             }
 
             // Visualizer on right

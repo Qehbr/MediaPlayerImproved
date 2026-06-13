@@ -58,7 +58,10 @@
     <entry name="compactProgressColor" type="String">
       <default></default>
     </entry>
-    <entry name="compactExtrasPosition" type="String">
+    <entry name="compactControlsPosition" type="String">
+      <default>auto</default>
+    </entry>
+    <entry name="compactProgressPosition" type="String">
       <default>auto</default>
     </entry>
     <entry name="compactControlsOrientation" type="String">

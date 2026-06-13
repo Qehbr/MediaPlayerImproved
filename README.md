@@ -132,6 +132,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Progress bar height | 6 px | Progress bar thickness (2–24) |
 | Progress bar color | Theme default | Full color picker or theme default |
 | Controls position | Automatic | Auto / Left / Right / Above / Below the track |
+| Progress bar position | Automatic | Independent of controls — Auto / Left / Right / Above / Below |
 | Button layout | Horizontal | Buttons in a row or a vertical stack |
 | Block order | Progress above | Progress bar above or below the controls |
 

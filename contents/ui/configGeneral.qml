@@ -28,7 +28,8 @@ KCM.SimpleKCM {
     property alias cfg_compactControlsSize: compactControlsSize.value
     property alias cfg_compactProgressHeight: compactProgressHeight.value
     property string cfg_compactProgressColor
-    property string cfg_compactExtrasPosition
+    property string cfg_compactControlsPosition
+    property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
     property alias cfg_enableVisualizer: enableVisualizer.checked
@@ -171,9 +172,9 @@ KCM.SimpleKCM {
         }
 
         QQC2.ComboBox {
-            id: compactExtrasPosition
+            id: compactControlsPosition
             Kirigami.FormData.label: i18n("Controls position:")
-            enabled: compactShowControls.checked || compactShowProgress.checked
+            enabled: compactShowControls.checked
             model: [
                 { text: i18n("Automatic"), value: "auto" },
                 { text: i18n("Left of track"), value: "left" },
@@ -183,12 +184,34 @@ KCM.SimpleKCM {
             ]
             textRole: "text"
             currentIndex: {
-                const pos = configGeneral.cfg_compactExtrasPosition
+                const pos = configGeneral.cfg_compactControlsPosition
                 const idx = model.findIndex(item => item.value === pos)
                 return idx >= 0 ? idx : 0
             }
             onActivated: {
-                configGeneral.cfg_compactExtrasPosition = model[currentIndex].value
+                configGeneral.cfg_compactControlsPosition = model[currentIndex].value
+            }
+        }
+
+        QQC2.ComboBox {
+            id: compactProgressPosition
+            Kirigami.FormData.label: i18n("Progress bar position:")
+            enabled: compactShowProgress.checked
+            model: [
+                { text: i18n("Automatic"), value: "auto" },
+                { text: i18n("Left of track"), value: "left" },
+                { text: i18n("Right of track"), value: "right" },
+                { text: i18n("Above track"), value: "top" },
+                { text: i18n("Below track"), value: "bottom" }
+            ]
+            textRole: "text"
+            currentIndex: {
+                const pos = configGeneral.cfg_compactProgressPosition
+                const idx = model.findIndex(item => item.value === pos)
+                return idx >= 0 ? idx : 0
+            }
+            onActivated: {
+                configGeneral.cfg_compactProgressPosition = model[currentIndex].value
             }
         }
 
@@ -215,7 +238,9 @@ KCM.SimpleKCM {
             id: compactProgressFirst
             Kirigami.FormData.label: i18n("Block order:")
             text: i18n("Progress bar above controls")
+            // Only matters when both share the same position.
             enabled: compactShowProgress.checked && compactShowControls.checked
+                && cfg_compactControlsPosition === cfg_compactProgressPosition
         }
 
         Item {
