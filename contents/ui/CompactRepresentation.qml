@@ -155,9 +155,15 @@ Loader {
             readonly property bool controlsVertical: plasmoid.configuration.compactControlsOrientation === "vertical"
             readonly property bool progressFirst: plasmoid.configuration.compactProgressFirst !== false
             readonly property string extrasPosition: plasmoid.configuration.compactExtrasPosition || "auto"
-            // "left"/"top" place the extras before the track, the rest after it
-            readonly property bool extrasBeforeTrack: extrasVisible && (extrasPosition === "left" || extrasPosition === "top")
-            readonly property bool extrasAfterTrack: extrasVisible && !extrasBeforeTrack
+            // Left/right (and automatic) place the extras as a sibling of the
+            // album art so the grid's natural orientation keeps the artwork
+            // sized correctly. Top/bottom stack the extras with the text inside
+            // its own cell, again leaving the artwork untouched. We never force
+            // the grid flow, which is what used to collapse the album art.
+            readonly property bool extrasSiblingBefore: extrasVisible && extrasPosition === "left"
+            readonly property bool extrasSiblingAfter: extrasVisible && (extrasPosition === "right" || extrasPosition === "auto")
+            readonly property bool extrasTextTop: extrasVisible && extrasPosition === "top"
+            readonly property bool extrasTextBottom: extrasVisible && extrasPosition === "bottom"
 
             // Read-only position for the progress bar. MPRIS doesn't push
             // Position updates, so seed from the player and tick locally,
@@ -196,14 +202,6 @@ Loader {
             rowSpacing: Kirigami.Units.smallSpacing
             columnSpacing: rowSpacing
             flow: {
-                // An explicit extras position overrides the orientation default:
-                // left/right force a row, top/bottom force a column.
-                if (grid.extrasVisible) {
-                    if (grid.extrasPosition === "top" || grid.extrasPosition === "bottom")
-                        return GridLayout.TopToBottom;
-                    if (grid.extrasPosition === "left" || grid.extrasPosition === "right")
-                        return GridLayout.LeftToRight;
-                }
                 switch (compactRepresentation.layoutForm) {
                 case CompactRepresentation.LayoutType.VerticalPanel:
                 case CompactRepresentation.LayoutType.VerticalDesktop:
@@ -300,10 +298,10 @@ Loader {
                 }
             }
 
-            // "Before track" slot (left / top)
+            // "Left of track" slot (sibling before the album art)
             Loader {
                 Layout.alignment: Qt.AlignCenter
-                active: grid.extrasBeforeTrack
+                active: grid.extrasSiblingBefore
                 visible: active
                 sourceComponent: active ? extrasComponent : null
             }
@@ -361,6 +359,15 @@ Loader {
                     anchors.fill: parent
                     spacing: 0
 
+                    // "Above track" slot — stacked with the text, leaving the
+                    // album art (a separate grid cell) at its natural size.
+                    Loader {
+                        Layout.fillWidth: true
+                        active: grid.extrasTextTop
+                        visible: active
+                        sourceComponent: active ? extrasComponent : null
+                    }
+
                     // Song Title
                     ScrollingLabel {
                         id: songTitle
@@ -403,6 +410,14 @@ Loader {
                                                // squeezes it and it scrolls needlessly
                     }
 
+                    // "Below track" slot — stacked with the text.
+                    Loader {
+                        Layout.fillWidth: true
+                        active: grid.extrasTextBottom
+                        visible: active
+                        sourceComponent: active ? extrasComponent : null
+                    }
+
                     // Audio Visualizer at bottom
                     AudioVisualizer {
                         id: bottomVisualizer
@@ -413,10 +428,12 @@ Loader {
                 }
             }
 
-            // "After track" slot (right / bottom / automatic)
+            // "Right of track" slot (sibling after the text; this is also the
+            // automatic placement — natural flow puts it right in horizontal
+            // layouts and below in vertical ones).
             Loader {
                 Layout.alignment: Qt.AlignCenter
-                active: grid.extrasAfterTrack
+                active: grid.extrasSiblingAfter
                 visible: active
                 sourceComponent: active ? extrasComponent : null
             }

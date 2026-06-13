@@ -14,7 +14,7 @@
         "Icon": "applications-multimedia",
         "License": "GPL-2.0+",
         "Name": "Media Player Improved",
-        "Version": "1.4",
+        "Version": "1.4.1",
         "Website": "https://github.com/Qehbr/MediaPlayerImproved"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
