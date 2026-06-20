@@ -10,6 +10,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.kquickcontrols as KQuickControls
+import org.kde.plasma.plasma5support as Plasma5Support
 
 KCM.SimpleKCM {
     id: configGeneral
@@ -18,6 +19,7 @@ KCM.SimpleKCM {
     property alias cfg_hideWhenIdle: hideWhenIdle.checked
     property alias cfg_noArtworkIcon: noArtworkIcon.text
     property alias cfg_compactMaxWidth: compactMaxWidth.value
+    property alias cfg_compactMinWidth: compactMinWidth.value
     property alias cfg_enableScrollingText: enableScrollingText.checked
     property alias cfg_scrollingTextSpeed: scrollingTextSpeed.value
     property alias cfg_compactShowControls: compactShowControls.checked
@@ -34,6 +36,7 @@ KCM.SimpleKCM {
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
+    property string cfg_visualizerCavaSource
     property alias cfg_visualizerInCompact: visualizerInCompact.checked
     property string cfg_visualizerPositionCompact
     property alias cfg_visualizerInExpanded: visualizerInExpanded.checked
@@ -83,6 +86,17 @@ KCM.SimpleKCM {
             from: 5
             to: 100
             stepSize: 1
+        }
+
+        QQC2.SpinBox {
+            id: compactMinWidth
+            Kirigami.FormData.label: i18n("Minimum width (grid units):")
+            from: 0
+            to: 100
+            stepSize: 1
+            QQC2.ToolTip.text: i18n("0 = automatic. Set equal to the maximum for a fixed width.")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         QQC2.CheckBox {
@@ -256,9 +270,47 @@ KCM.SimpleKCM {
 
         QQC2.CheckBox {
             id: visualizerUseRealAudio
-            Kirigami.FormData.label: i18n("Audio source:")
+            Kirigami.FormData.label: i18n("Real audio:")
             enabled: enableVisualizer.checked
             text: i18n("React to real audio (requires cava)")
+        }
+
+        // Enumerate PulseAudio/PipeWire sources for the dropdown below.
+        Plasma5Support.DataSource {
+            id: sourcesProbe
+            engine: "executable"
+            connectedSources: []
+            onNewData: (src, data) => {
+                sourcesProbe.disconnectSource(src);
+                let list = [{ text: i18n("Automatic (default output)"), value: "" }];
+                const txt = data.stdout || "";
+                const blocks = txt.split(/(?:^|\n)Source #[0-9]+/);
+                for (let i = 0; i < blocks.length; ++i) {
+                    const n = blocks[i].match(/\n\s*Name:\s*([^\n]+)/);
+                    if (!n) {
+                        continue;
+                    }
+                    const d = blocks[i].match(/\n\s*Description:\s*([^\n]+)/);
+                    list.push({ text: d ? d[1] : n[1], value: n[1] });
+                }
+                cavaSource.sourceModel = list;
+            }
+            Component.onCompleted: connectSource("pactl list sources")
+        }
+
+        QQC2.ComboBox {
+            id: cavaSource
+            Kirigami.FormData.label: i18n("cava source:")
+            enabled: enableVisualizer.checked && visualizerUseRealAudio.checked
+            property var sourceModel: [{ text: i18n("Automatic (default output)"), value: "" }]
+            model: sourceModel
+            textRole: "text"
+            currentIndex: {
+                const v = configGeneral.cfg_visualizerCavaSource;
+                const idx = sourceModel.findIndex(item => item.value === v);
+                return idx >= 0 ? idx : 0;
+            }
+            onActivated: configGeneral.cfg_visualizerCavaSource = sourceModel[currentIndex].value
         }
 
         QQC2.CheckBox {

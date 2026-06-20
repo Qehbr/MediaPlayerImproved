@@ -38,6 +38,7 @@ Item {
     // Opt-in real audio via cava. Falls back to the simulation whenever no
     // fresh data is arriving (cava missing, disabled, paused, or starting up).
     readonly property bool useRealAudio: plasmoid.configuration.visualizerUseRealAudio === true
+    readonly property string cavaSource: plasmoid.configuration.visualizerCavaSource || ""
     readonly property bool wantCava: useRealAudio && active
     property double lastRealMs: 0
     readonly property bool realActive: useRealAudio && (Date.now() - lastRealMs < 600)
@@ -97,11 +98,12 @@ Item {
         stopCava();
         cavaTag = "mpi" + Math.floor(Math.random() * 1e9);
         cavaOut = "/tmp/mpi-cava-" + cavaTag + ".dat";
-        cavaCtl.connectSource("sh \"" + helperPath + "\" " + barCount + " " + cavaTag);
+        cavaCtl.connectSource("sh \"" + helperPath + "\" " + barCount + " " + cavaTag + " \"" + cavaSource + "\"");
     }
 
     onWantCavaChanged: wantCava ? startCava() : stopCava()
     onBarCountChanged: if (wantCava) { startCava(); }
+    onCavaSourceChanged: if (wantCava) { startCava(); }
     Component.onCompleted: if (wantCava) { startCava(); }
     Component.onDestruction: stopCava()
 

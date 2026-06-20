@@ -43,6 +43,11 @@ Loader {
 
     Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
 
+    // Optional minimum/forced width in a horizontal panel (0 = disabled). Keeps
+    // the widget — and the visualizer bars — from shrinking on short titles.
+    Layout.minimumWidth: (layoutForm === CompactRepresentation.LayoutType.HorizontalPanel && plasmoid.configuration.compactMinWidth > 0)
+        ? (Kirigami.Units.gridUnit * plasmoid.configuration.compactMinWidth + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
+
     enum LayoutType {
         Tray,
         HorizontalPanel,

@@ -3,14 +3,17 @@
 # per write (semicolon-separated integers 0-100). The widget polls that file.
 # cava captures the system audio output, so the bars react to what is playing.
 #
-# Usage: cava.sh <bars> <tag>
+# Usage: cava.sh <bars> <tag> [source]
 #   All temp files live at /tmp/mpi-cava-<tag>.{conf,fifo,dat}. The tag appears
 #   in this process's and cava's command line, so the widget can reliably stop
 #   everything with `pkill -f mpi-cava-<tag>` (the executable data engine does
 #   not reliably kill child processes on its own).
+#   [source] is an optional PulseAudio/PipeWire source name; empty means cava's
+#   default (the system output monitor).
 
 BARS="${1:-20}"
 TAG="$2"
+SOURCE="$3"
 [ -z "$TAG" ] && exit 1
 command -v cava >/dev/null 2>&1 || exit 127
 
@@ -28,18 +31,23 @@ trap cleanup EXIT INT TERM
 rm -f "$FIFO"
 mkfifo "$FIFO" 2>/dev/null || exit 1
 
-cat > "$CFG" <<EOF
-[general]
-bars = $BARS
-framerate = 60
-[output]
-method = raw
-raw_target = $FIFO
-data_format = ascii
-ascii_max_range = 100
-bar_delimiter = 59
-frame_delimiter = 10
-EOF
+{
+    echo "[general]"
+    echo "bars = $BARS"
+    echo "framerate = 60"
+    if [ -n "$SOURCE" ]; then
+        echo "[input]"
+        echo "method = pulse"
+        echo "source = $SOURCE"
+    fi
+    echo "[output]"
+    echo "method = raw"
+    echo "raw_target = $FIFO"
+    echo "data_format = ascii"
+    echo "ascii_max_range = 100"
+    echo "bar_delimiter = 59"
+    echo "frame_delimiter = 10"
+} > "$CFG"
 
 cava -p "$CFG" &
 CAVA_PID=$!

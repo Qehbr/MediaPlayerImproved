@@ -123,6 +123,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Maximum width | 20 | Max widget width in grid units (5–100) |
+| Minimum width | 0 | Min widget width in grid units (0 = automatic; set equal to max for a fixed width) |
 | Scrolling text | Enabled | Marquee animation for long text |
 | Scroll speed | 50 px/s | Text scroll speed (10–200) |
 | Playback controls | Disabled | Show Previous / Play-Pause / Next buttons |
@@ -141,6 +142,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 |---------|---------|-------------|
 | Enable visualizer | Enabled | Master on/off toggle |
 | React to real audio | Disabled | Use `cava` for real frequency analysis (requires cava); falls back to the animation otherwise |
+| cava source | Automatic | Audio source the bars react to — pick from detected devices, or the default output |
 | Show in compact view | Enabled | Visualizer in the panel widget |
 | Position (compact) | Bottom | Bottom / Left / Right / Behind |
 | Show in expanded view | Enabled | Visualizer in the popup |
