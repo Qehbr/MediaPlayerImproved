@@ -75,6 +75,11 @@
     <entry name="compactProgressFirst" type="Bool">
       <default>true</default>
     </entry>
+    <entry name="compactAlbumArtHeight" type="Int">
+      <default>30</default>
+      <min>0</min>
+      <max>256</max>
+    </entry>
     <entry name="enableVisualizer" type="Bool">
       <default>true</default>
     </entry>

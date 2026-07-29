@@ -155,6 +155,7 @@ Loader {
             // Appearance / placement settings
             readonly property int controlsSize: plasmoid.configuration.compactControlsSize || Kirigami.Units.iconSizes.smallMedium
             readonly property int progressBarHeight: plasmoid.configuration.compactProgressHeight || 6
+            readonly property int albumArtHeight: plasmoid.configuration.compactAlbumArtHeight || 6
             readonly property color progressColor: plasmoid.configuration.compactProgressColor ? plasmoid.configuration.compactProgressColor : Kirigami.Theme.highlightColor
             readonly property bool controlsVertical: plasmoid.configuration.compactControlsOrientation === "vertical"
             readonly property bool progressFirst: plasmoid.configuration.compactProgressFirst !== false
@@ -331,10 +332,10 @@ Loader {
                 id: albumArt
 
                 Layout.alignment: Qt.AlignVCenter
-                Layout.fillWidth: compactRepresentation.Layout.fillWidth
-                Layout.fillHeight: compactRepresentation.Layout.fillHeight
-                Layout.preferredWidth: compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height
-                Layout.preferredHeight: compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width
+                Layout.fillWidth: grid.albumArtHeight > 0 ? false : compactRepresentation.Layout.fillWidth
+                Layout.fillHeight: grid.albumArtHeight > 0 ? false : compactRepresentation.Layout.fillHeight
+                Layout.preferredWidth: grid.albumArtHeight > 0 ? grid.albumArtHeight : (compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height)
+                Layout.preferredHeight: grid.albumArtHeight > 0 ? grid.albumArtHeight : (compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width)
 
                 inCompactRepresentation: true
 
