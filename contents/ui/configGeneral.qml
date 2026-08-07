@@ -34,7 +34,7 @@ KCM.SimpleKCM {
     property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
-    property alias cfg_compactAlbumArtHeight: compactAlbumArtHeight.value
+    property alias cfg_compactAlbumArtSize: compactAlbumArtSize.value
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
     property string cfg_visualizerCavaSource
@@ -96,6 +96,17 @@ KCM.SimpleKCM {
             to: 100
             stepSize: 1
             QQC2.ToolTip.text: i18n("0 = automatic. Set equal to the maximum for a fixed width.")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+
+        QQC2.SpinBox {
+            id: compactAlbumArtSize
+            Kirigami.FormData.label: i18n("Album art size (px):")
+            from: 0
+            to: 256
+            stepSize: 5
+            QQC2.ToolTip.text: i18n("0 = automatic (fill the available panel thickness)")
             QQC2.ToolTip.visible: hovered
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
@@ -256,17 +267,6 @@ KCM.SimpleKCM {
             // Only matters when both share the same position.
             enabled: compactShowProgress.checked && compactShowControls.checked
                 && cfg_compactControlsPosition === cfg_compactProgressPosition
-        }
-
-        QQC2.SpinBox {
-            id: compactAlbumArtHeight
-            Kirigami.FormData.label: i18n("Album art size (px):")
-            from: 0
-            to: 256
-            stepSize: 5
-            QQC2.ToolTip.text: i18n("0 = automatic (match panel height or available space)")
-            QQC2.ToolTip.visible: hovered
-            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         Item {
