@@ -34,6 +34,7 @@ KCM.SimpleKCM {
     property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
+    property alias cfg_compactAlbumArtSize: compactAlbumArtSize.value
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
     property string cfg_visualizerCavaSource
@@ -95,6 +96,17 @@ KCM.SimpleKCM {
             to: 100
             stepSize: 1
             QQC2.ToolTip.text: i18n("0 = automatic. Set equal to the maximum for a fixed width.")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+
+        QQC2.SpinBox {
+            id: compactAlbumArtSize
+            Kirigami.FormData.label: i18n("Album art size (px):")
+            from: 0
+            to: 256
+            stepSize: 5
+            QQC2.ToolTip.text: i18n("0 = automatic (fill the available panel thickness)")
             QQC2.ToolTip.visible: hovered
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }

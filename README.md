@@ -25,7 +25,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 
 ### Wider & Customizable Layout
 - Configurable maximum width for the compact panel widget (5–100 grid units)
-- Album art with smooth transitions between tracks
+- Album art with smooth transitions between tracks, at panel height or a fixed pixel size
 - Blurred album art background in the expanded view
 - Customizable placeholder icon shown when a track has no album art
 - Responsive layout that adapts to horizontal panels, vertical panels, and desktop placement
@@ -124,6 +124,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 |---------|---------|-------------|
 | Maximum width | 20 | Max widget width in grid units (5–100) |
 | Minimum width | 0 | Min widget width in grid units (0 = automatic; set equal to max for a fixed width) |
+| Album art size | 0 | Fixed album art size in pixels (0 = automatic; fills the panel thickness) |
 | Scrolling text | Enabled | Marquee animation for long text |
 | Scroll speed | 50 px/s | Text scroll speed (10–200) |
 | Playback controls | Disabled | Show Previous / Play-Pause / Next buttons |

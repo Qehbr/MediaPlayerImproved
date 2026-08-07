@@ -41,12 +41,16 @@ Loader {
         }
     }
 
-    Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
+    // How much width the album art occupies. Both width limits below budget for
+    // it on top of the text area, so they follow the fixed size when there is one.
+    readonly property int albumArtExtent: albumArtSize > 0 ? albumArtSize : compactRepresentation.height
+
+    Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) + compactRepresentation.albumArtExtent + Kirigami.Units.smallSpacing) : -1
 
     // Optional minimum/forced width in a horizontal panel (0 = disabled). Keeps
     // the widget — and the visualizer bars — from shrinking on short titles.
     Layout.minimumWidth: (layoutForm === CompactRepresentation.LayoutType.HorizontalPanel && plasmoid.configuration.compactMinWidth > 0)
-        ? (Kirigami.Units.gridUnit * plasmoid.configuration.compactMinWidth + compactRepresentation.height + Kirigami.Units.smallSpacing) : -1
+        ? (Kirigami.Units.gridUnit * plasmoid.configuration.compactMinWidth + compactRepresentation.albumArtExtent + Kirigami.Units.smallSpacing) : -1
 
     enum LayoutType {
         Tray,
@@ -74,6 +78,23 @@ Loader {
     readonly property bool isVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property bool inPanel: [PlasmaCore.Types.TopEdge, PlasmaCore.Types.RightEdge, PlasmaCore.Types.BottomEdge, PlasmaCore.Types.LeftEdge].includes(Plasmoid.location)
     readonly property bool inTray: parent.objectName === "org.kde.desktop-CompactApplet"
+
+    // Fixed album art size in pixels, or 0 for the automatic behaviour (square,
+    // filling the panel thickness). Clamped to the space the placement actually
+    // offers so an oversized value can't overflow a thin panel.
+    readonly property int albumArtSize: {
+        const configured = plasmoid.configuration.compactAlbumArtSize;
+        if (configured <= 0) {
+            return 0;
+        }
+        switch (compactRepresentation.layoutForm) {
+        case CompactRepresentation.LayoutType.VerticalPanel:
+        case CompactRepresentation.LayoutType.VerticalDesktop:
+            return Math.min(configured, compactRepresentation.width);
+        default:
+            return Math.min(configured, compactRepresentation.height);
+        }
+    }
 
     sourceComponent: {
         if (root.track.length === 0) {
@@ -330,11 +351,14 @@ Loader {
             AlbumArtStackView {
                 id: albumArt
 
-                Layout.alignment: Qt.AlignVCenter
-                Layout.fillWidth: compactRepresentation.Layout.fillWidth
-                Layout.fillHeight: compactRepresentation.Layout.fillHeight
-                Layout.preferredWidth: compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height
-                Layout.preferredHeight: compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width
+                // A fixed size opts out of filling, so centre it in the cell that
+                // is now larger than the art (matters in vertical placements,
+                // where the art would otherwise sit against one edge).
+                Layout.alignment: Qt.AlignCenter
+                Layout.fillWidth: compactRepresentation.albumArtSize > 0 ? false : compactRepresentation.Layout.fillWidth
+                Layout.fillHeight: compactRepresentation.albumArtSize > 0 ? false : compactRepresentation.Layout.fillHeight
+                Layout.preferredWidth: compactRepresentation.albumArtSize > 0 ? compactRepresentation.albumArtSize : (compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height)
+                Layout.preferredHeight: compactRepresentation.albumArtSize > 0 ? compactRepresentation.albumArtSize : (compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width)
 
                 inCompactRepresentation: true
 
