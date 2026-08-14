@@ -96,7 +96,11 @@ Item {
     }
     function startCava() {
         stopCava();
-        cavaTag = "mpi" + Math.floor(Math.random() * 1e9);
+        // Zero-padded to a fixed width: equal-length tags can never be a
+        // substring of one another, so the stop pkill and the helper's temp
+        // file sweep can't confuse two concurrent instances (the panel and the
+        // popup each run their own).
+        cavaTag = "mpi" + ("00000000" + Math.floor(Math.random() * 1e9)).slice(-9);
         cavaOut = "/tmp/mpi-cava-" + cavaTag + ".dat";
         cavaCtl.connectSource("sh \"" + helperPath + "\" " + barCount + " " + cavaTag + " \"" + cavaSource + "\"");
     }
