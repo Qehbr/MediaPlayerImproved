@@ -79,6 +79,8 @@ Loader {
     readonly property bool inPanel: [PlasmaCore.Types.TopEdge, PlasmaCore.Types.RightEdge, PlasmaCore.Types.BottomEdge, PlasmaCore.Types.LeftEdge].includes(Plasmoid.location)
     readonly property bool inTray: parent.objectName === "org.kde.desktop-CompactApplet"
 
+    readonly property int albumArtEnabled: plasmoid.configuration.compactAlbumArtEnabled
+
     // Fixed album art size in pixels, or 0 for the automatic behaviour (square,
     // filling the panel thickness). Clamped to the space the placement actually
     // offers so an oversized value can't overflow a thin panel.
@@ -351,6 +353,7 @@ Loader {
             AlbumArtStackView {
                 id: albumArt
 
+                visible: compactRepresentation.albumArtEnabled
                 // A fixed size opts out of filling, so centre it in the cell that
                 // is now larger than the art (matters in vertical placements,
                 // where the art would otherwise sit against one edge).

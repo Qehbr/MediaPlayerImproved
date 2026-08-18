@@ -34,6 +34,7 @@ KCM.SimpleKCM {
     property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
+    property alias cfg_compactAlbumArtEnabled: compactAlbumArtEnabled.checked
     property alias cfg_compactAlbumArtSize: compactAlbumArtSize.value
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
@@ -100,8 +101,15 @@ KCM.SimpleKCM {
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
+        QQC2.CheckBox {
+            id: compactAlbumArtEnabled
+            Kirigami.FormData.label: i18n("Show album art:")
+            text: i18n("Show album art in compact view")
+        }
+
         QQC2.SpinBox {
             id: compactAlbumArtSize
+            enabled: compactAlbumArtEnabled.checked
             Kirigami.FormData.label: i18n("Album art size (px):")
             from: 0
             to: 256
