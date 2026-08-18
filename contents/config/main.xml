@@ -75,12 +75,12 @@
     <entry name="compactProgressFirst" type="Bool">
       <default>true</default>
     </entry>
-    <entry name="compactAlbumArtEnabled" type="Bool">
-      <default>true</default>
+    <entry name="compactAlbumArt" type="String">
+      <default>auto</default>
     </entry>
     <entry name="compactAlbumArtSize" type="Int">
-      <default>0</default>
-      <min>0</min>
+      <default>25</default>
+      <min>1</min>
       <max>256</max>
     </entry>
     <entry name="enableVisualizer" type="Bool">
