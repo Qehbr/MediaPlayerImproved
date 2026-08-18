@@ -34,6 +34,7 @@ KCM.SimpleKCM {
     property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
+    property string cfg_compactAlbumArt
     property alias cfg_compactAlbumArtSize: compactAlbumArtSize.value
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
@@ -100,15 +101,32 @@ KCM.SimpleKCM {
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
+        QQC2.ComboBox {
+            id: compactAlbumArt
+            Kirigami.FormData.label: i18n("Album art:")
+            model: [
+                { text: i18n("Hide"), value: "hide" },
+                { text: i18n("Automatic"), value: "auto" },
+                { text: i18n("Set size"), value: "manual" },
+            ]
+            textRole: "text"
+            currentIndex: {
+                const pos = configGeneral.cfg_compactAlbumArt
+                const idx = model.findIndex(item => item.value === pos)
+                return idx >= 0 ? idx : 0
+            }
+            onActivated: {
+                configGeneral.cfg_compactAlbumArt = model[currentIndex].value
+            }
+        }
+
         QQC2.SpinBox {
             id: compactAlbumArtSize
+            enabled: configGeneral.cfg_compactAlbumArt === "manual"
             Kirigami.FormData.label: i18n("Album art size (px):")
-            from: 0
+            from: 1
             to: 256
             stepSize: 5
-            QQC2.ToolTip.text: i18n("0 = automatic (fill the available panel thickness)")
-            QQC2.ToolTip.visible: hovered
-            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         QQC2.CheckBox {

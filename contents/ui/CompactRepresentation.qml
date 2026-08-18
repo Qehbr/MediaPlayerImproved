@@ -43,7 +43,7 @@ Loader {
 
     // How much width the album art occupies. Both width limits below budget for
     // it on top of the text area, so they follow the fixed size when there is one.
-    readonly property int albumArtExtent: albumArtSize > 0 ? albumArtSize : compactRepresentation.height
+    readonly property int albumArtExtent: albumArtPresentation === AlbumArtPresentation.Hide ? 0 : (albumArtPresentation === AlbumArtPresentation.Manual ? albumArtManualSize : compactRepresentation.height)
 
     Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) + compactRepresentation.albumArtExtent + Kirigami.Units.smallSpacing) : -1
 
@@ -79,14 +79,27 @@ Loader {
     readonly property bool inPanel: [PlasmaCore.Types.TopEdge, PlasmaCore.Types.RightEdge, PlasmaCore.Types.BottomEdge, PlasmaCore.Types.LeftEdge].includes(Plasmoid.location)
     readonly property bool inTray: parent.objectName === "org.kde.desktop-CompactApplet"
 
-    // Fixed album art size in pixels, or 0 for the automatic behaviour (square,
-    // filling the panel thickness). Clamped to the space the placement actually
-    // offers so an oversized value can't overflow a thin panel.
-    readonly property int albumArtSize: {
-        const configured = plasmoid.configuration.compactAlbumArtSize;
-        if (configured <= 0) {
-            return 0;
+    enum AlbumArtPresentation {
+        Hide,
+        Auto,
+        Manual
+    }
+
+    readonly property int albumArtPresentation: {
+        const presentation = plasmoid.configuration.compactAlbumArt;
+        if (presentation === "hide") {
+            return CompactRepresentation.AlbumArtPresentation.Hide;
+        } else if (presentation === "manual") {
+            return CompactRepresentation.AlbumArtPresentation.Manual;
         }
+        return CompactRepresentation.AlbumArtPresentation.Auto;
+    }
+
+    // Fixed album art size in pixels
+    // Clamped to the space the placement actually offers so an oversized value
+    // can't overflow a thin panel.
+    readonly property int albumArtManualSize: {
+        const configured = plasmoid.configuration.compactAlbumArtSize;
         switch (compactRepresentation.layoutForm) {
         case CompactRepresentation.LayoutType.VerticalPanel:
         case CompactRepresentation.LayoutType.VerticalDesktop:
@@ -351,14 +364,15 @@ Loader {
             AlbumArtStackView {
                 id: albumArt
 
+                visible: albumArtPresentation !== CompactRepresentation.AlbumArtPresentation.Hide
                 // A fixed size opts out of filling, so centre it in the cell that
                 // is now larger than the art (matters in vertical placements,
                 // where the art would otherwise sit against one edge).
                 Layout.alignment: Qt.AlignCenter
-                Layout.fillWidth: compactRepresentation.albumArtSize > 0 ? false : compactRepresentation.Layout.fillWidth
-                Layout.fillHeight: compactRepresentation.albumArtSize > 0 ? false : compactRepresentation.Layout.fillHeight
-                Layout.preferredWidth: compactRepresentation.albumArtSize > 0 ? compactRepresentation.albumArtSize : (compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height)
-                Layout.preferredHeight: compactRepresentation.albumArtSize > 0 ? compactRepresentation.albumArtSize : (compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width)
+                Layout.fillWidth: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? false : compactRepresentation.Layout.fillWidth
+                Layout.fillHeight: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? false : compactRepresentation.Layout.fillHeight
+                Layout.preferredWidth: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? compactRepresentation.albumArtManualSize : (compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height)
+                Layout.preferredHeight: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? compactRepresentation.albumArtManualSize : (compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width)
 
                 inCompactRepresentation: true
 

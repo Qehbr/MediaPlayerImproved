@@ -124,7 +124,8 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 |---------|---------|-------------|
 | Maximum width | 20 | Max widget width in grid units (5–100) |
 | Minimum width | 0 | Min widget width in grid units (0 = automatic; set equal to max for a fixed width) |
-| Album art size | 0 | Fixed album art size in pixels (0 = automatic; fills the panel thickness) |
+| Album art | Automatic | Hide / Automatic / Set size |
+| Album art size | 25 | Fixed album art size in pixels. (only used if `Album art` is `Set size`) |
 | Scrolling text | Enabled | Marquee animation for long text |
 | Scroll speed | 50 px/s | Text scroll speed (10–200) |
 | Playback controls | Disabled | Show Previous / Play-Pause / Next buttons |
