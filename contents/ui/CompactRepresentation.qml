@@ -376,6 +376,7 @@ Loader {
             // Visualizer on left
             AudioVisualizer {
                 id: leftVisualizer
+                role: "compactleft"
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
@@ -394,6 +395,7 @@ Loader {
                 // Behind visualizer (rendered first, so it appears behind)
                 AudioVisualizer {
                     id: behindVisualizer
+                    role: "compactbehind"
                     anchors.fill: parent
                     visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
                     opacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
@@ -468,6 +470,7 @@ Loader {
                     // Audio Visualizer at bottom
                     AudioVisualizer {
                         id: bottomVisualizer
+                        role: "compactbottom"
                         Layout.fillWidth: true
                         Layout.preferredHeight: (plasmoid.configuration.visualizerHeight || 30) / 2
                         visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
@@ -489,6 +492,7 @@ Loader {
             // Visualizer on right
             AudioVisualizer {
                 id: rightVisualizer
+                role: "compactright"
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "right")
