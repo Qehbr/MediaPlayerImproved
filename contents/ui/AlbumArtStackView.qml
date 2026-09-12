@@ -28,6 +28,21 @@ Item {
     readonly property bool animating: exitTransition.running || popExitTransition.running
 
     /**
+     * Shape of the artwork on show, 1 when there is none.
+     *
+     * Read from the decoded size rather than the painted size: the compact
+     * representation derives the artwork's width from this, and painted size
+     * follows the item's size, which would make that circular.
+     */
+    readonly property real imageAspectRatio: {
+        const current = albumArt.currentItem;
+        if (current instanceof Image && current.status === Image.Ready && current.implicitHeight > 0) {
+            return current.implicitWidth / current.implicitHeight;
+        }
+        return 1;
+    }
+
+    /**
      * Whether the component is used in the compact representation
      */
     property bool inCompactRepresentation: false
