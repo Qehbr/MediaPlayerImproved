@@ -838,12 +838,17 @@ PlasmaExtras.Representation {
             // Audio Visualizer in Expanded View
             AudioVisualizer {
                 id: expandedVisualizer
+                role: "expanded"
                 Layout.fillWidth: true
                 Layout.preferredHeight: plasmoid.configuration.visualizerHeight || 30
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: Kirigami.Units.smallSpacing
                 Layout.maximumWidth: Math.min(Kirigami.Units.gridUnit * 45, Math.round(expandedRepresentation.width * (7 / 10)))
-                visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInExpanded !== false)
+                // root.expanded matters: Plasma hides the popup's window rather
+                // than this item, so without it this stays "visible" while the
+                // popup is shut and runs a second cava alongside the panel's,
+                // doubling the capture work for bars nobody is looking at.
+                visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInExpanded !== false) && root.expanded
             }
         }
     }
