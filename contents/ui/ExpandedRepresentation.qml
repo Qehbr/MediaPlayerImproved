@@ -36,6 +36,19 @@ PlasmaExtras.Representation {
     readonly property int controlSize: Kirigami.Units.iconSizes.medium
 
     readonly property bool softwareRendering: GraphicsInfo.api === GraphicsInfo.Software
+
+    // Whether the darkened, blurred album art is actually painted behind the
+    // track details. Only then is white text guaranteed to be readable.
+    //
+    // Having the art is not the same thing as showing it: the backdrop keeps
+    // the default size of 0x0 until its albumArtReady state applies, which
+    // needs an image that has finished loading and has a painted size, while
+    // hasImage is already true while the artwork is still loading. Colouring
+    // the text on hasImage therefore drew it white over the popup's own
+    // background, which is invisible on a light colour scheme and perfectly
+    // readable on a dark one.
+    readonly property bool overArtBackdrop: backgroundImage.visible
+        && backgroundImage.width > 0 && backgroundImage.height > 0
     readonly property var appletInterface: root
     property real rate: mpris2Model.currentPlayer?.rate ?? 1
     property double length: mpris2Model.currentPlayer?.length ?? 0
@@ -352,7 +365,7 @@ PlasmaExtras.Representation {
                     id: songTitle
                     level: 1
 
-                    color: (expandedRepresentation.softwareRendering || !albumArt.hasImage) ? Kirigami.Theme.textColor : "white"
+                    color: expandedRepresentation.overArtBackdrop ? "white" : Kirigami.Theme.textColor
 
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
@@ -369,7 +382,7 @@ PlasmaExtras.Representation {
                     visible: root.artist
                     level: 2
 
-                    color: (expandedRepresentation.softwareRendering || !albumArt.hasImage) ? Kirigami.Theme.textColor : "white"
+                    color: expandedRepresentation.overArtBackdrop ? "white" : Kirigami.Theme.textColor
 
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
@@ -381,7 +394,7 @@ PlasmaExtras.Representation {
                     Layout.maximumHeight: Kirigami.Units.gridUnit * 2
                 }
                 Kirigami.Heading { // Song Album
-                    color: (expandedRepresentation.softwareRendering || !albumArt.hasImage) ? Kirigami.Theme.textColor : "white"
+                    color: expandedRepresentation.overArtBackdrop ? "white" : Kirigami.Theme.textColor
 
                     level: 3
                     opacity: 0.75
@@ -838,12 +851,17 @@ PlasmaExtras.Representation {
             // Audio Visualizer in Expanded View
             AudioVisualizer {
                 id: expandedVisualizer
+                role: "expanded"
                 Layout.fillWidth: true
                 Layout.preferredHeight: plasmoid.configuration.visualizerHeight || 30
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: Kirigami.Units.smallSpacing
                 Layout.maximumWidth: Math.min(Kirigami.Units.gridUnit * 45, Math.round(expandedRepresentation.width * (7 / 10)))
-                visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInExpanded !== false)
+                // root.expanded matters: Plasma hides the popup's window rather
+                // than this item, so without it this stays "visible" while the
+                // popup is shut and runs a second cava alongside the panel's,
+                // doubling the capture work for bars nobody is looking at.
+                visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInExpanded !== false) && root.expanded
             }
         }
     }

@@ -364,15 +364,29 @@ Loader {
             AlbumArtStackView {
                 id: albumArt
 
-                visible: albumArtPresentation !== CompactRepresentation.AlbumArtPresentation.Hide
+                visible: compactRepresentation.albumArtPresentation !== CompactRepresentation.AlbumArtPresentation.Hide
+
+                // Shape of the artwork, so a wide thumbnail (video players hand
+                // us 16:9 ones) gets a wide box and is shown whole instead of
+                // being cropped to its centre by the square box it used to be
+                // given. Clamped so an extreme ratio cannot take over the panel;
+                // anything past the clamp is still cropped rather than letterboxed.
+                readonly property real displayAspect: Math.max(0.5, Math.min(2.5, albumArt.imageAspectRatio))
+
+                readonly property bool sizedByHand: compactRepresentation.albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual
+
                 // A fixed size opts out of filling, so centre it in the cell that
                 // is now larger than the art (matters in vertical placements,
                 // where the art would otherwise sit against one edge).
                 Layout.alignment: Qt.AlignCenter
-                Layout.fillWidth: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? false : compactRepresentation.Layout.fillWidth
-                Layout.fillHeight: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? false : compactRepresentation.Layout.fillHeight
-                Layout.preferredWidth: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? compactRepresentation.albumArtManualSize : (compactRepresentation.Layout.fillWidth ? -1 : compactRepresentation.height)
-                Layout.preferredHeight: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual ? compactRepresentation.albumArtManualSize : (compactRepresentation.Layout.fillHeight ? -1 : compactRepresentation.width)
+                Layout.fillWidth: albumArt.sizedByHand ? false : compactRepresentation.Layout.fillWidth
+                Layout.fillHeight: albumArt.sizedByHand ? false : compactRepresentation.Layout.fillHeight
+                Layout.preferredWidth: albumArt.sizedByHand
+                    ? Math.round(compactRepresentation.albumArtManualSize * albumArt.displayAspect)
+                    : (compactRepresentation.Layout.fillWidth ? -1 : Math.round(compactRepresentation.height * albumArt.displayAspect))
+                Layout.preferredHeight: albumArt.sizedByHand
+                    ? compactRepresentation.albumArtManualSize
+                    : (compactRepresentation.Layout.fillHeight ? -1 : Math.round(compactRepresentation.width / albumArt.displayAspect))
 
                 inCompactRepresentation: true
 
@@ -390,12 +404,40 @@ Loader {
             // Visualizer on left
             AudioVisualizer {
                 id: leftVisualizer
+                role: "compactleft"
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
             }
 
             Item {
+                id: textCell
+
+                // Height still free for whatever is stacked under the labels.
+                // A panel fixes the widget's thickness, so anything the column
+                // asks for beyond this is not shrunk -- it is drawn outside the
+                // panel, which is what left the bars and the artwork hanging
+                // below it. Derived from the applet's own height, which the
+                // panel decides, rather than from this item's, so it cannot
+                // feed back into the column's implicit height.
+                readonly property real freeHeight: {
+                    let available = compactRepresentation.height;
+                    if (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop) {
+                        available -= albumArt.height + grid.rowSpacing;
+                    }
+                    available -= songTitle.implicitHeight;
+                    if (songArtist.visible) {
+                        available -= songArtist.implicitHeight;
+                    }
+                    if (topExtrasLoader.visible) {
+                        available -= topExtrasLoader.implicitHeight;
+                    }
+                    if (bottomExtrasLoader.visible) {
+                        available -= bottomExtrasLoader.implicitHeight;
+                    }
+                    return available;
+                }
+
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
                 Layout.maximumWidth: compactRepresentation.layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) : -1
@@ -408,6 +450,7 @@ Loader {
                 // Behind visualizer (rendered first, so it appears behind)
                 AudioVisualizer {
                     id: behindVisualizer
+                    role: "compactbehind"
                     anchors.fill: parent
                     visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
                     opacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
@@ -421,6 +464,7 @@ Loader {
                     // "Above track" slot — stacked with the text, leaving the
                     // album art (a separate grid cell) at its natural size.
                     Loader {
+                        id: topExtrasLoader
                         Layout.fillWidth: true
                         active: grid.slotActive("texttop")
                         visible: active
@@ -472,6 +516,7 @@ Loader {
 
                     // "Below track" slot — stacked with the text.
                     Loader {
+                        id: bottomExtrasLoader
                         Layout.fillWidth: true
                         active: grid.slotActive("textbottom")
                         visible: active
@@ -482,9 +527,14 @@ Loader {
                     // Audio Visualizer at bottom
                     AudioVisualizer {
                         id: bottomVisualizer
+                        role: "compactbottom"
                         Layout.fillWidth: true
-                        Layout.preferredHeight: (plasmoid.configuration.visualizerHeight || 30) / 2
+                        // Never taller than the room left over, so the bars
+                        // stay inside the panel instead of pushing the rest of
+                        // the widget out of it.
+                        Layout.preferredHeight: Math.max(0, Math.min((plasmoid.configuration.visualizerHeight || 30) / 2, textCell.freeHeight))
                         visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
+                            && textCell.freeHeight >= Kirigami.Units.smallSpacing
                     }
                 }
             }
@@ -503,6 +553,7 @@ Loader {
             // Visualizer on right
             AudioVisualizer {
                 id: rightVisualizer
+                role: "compactright"
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "right")

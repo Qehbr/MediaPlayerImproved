@@ -47,6 +47,15 @@ Item {
     property string cavaTag: ""
     property string cavaOut: ""
 
+    // Names this visualizer rather than one start of it. Several visualizers run
+    // at once (the panel's and the popup's), so the helper needs to tell its own
+    // predecessor apart from a sibling. It has to stay the same across component
+    // teardown too: the compact representation is destroyed and rebuilt whenever
+    // the track title goes briefly empty between songs, and a fresh id there
+    // would strand the instance the destroyed component left behind.
+    required property string role
+    readonly property string vizId: (plasmoid.id !== undefined ? plasmoid.id : 0) + "x" + role
+
     // Long-running cava control (start) and one-shot stop (pkill). cava is
     // started via the executable engine, but the engine doesn't reliably kill
     // child processes, so we stop it explicitly with pkill on a unique tag.
@@ -88,17 +97,40 @@ Item {
     }
 
     function stopCava() {
+        restartTimer.stop();
         if (cavaTag !== "") {
             cavaCtl.connectSource("pkill -f mpi-cava-" + cavaTag);
             cavaTag = "";
             cavaOut = "";
         }
     }
+
+    // Coalesce restarts. barCount follows the widget's width, so one panel
+    // resize emits a burst of changes, and restarting on each of them dispatched
+    // a stop for a tag whose start had not spawned yet -- the stop matched
+    // nothing and the instance was orphaned under a tag the widget had already
+    // thrown away. Waiting for the burst to settle removes that race rather than
+    // cleaning up after it (#11).
+    Timer {
+        id: restartTimer
+        interval: 300
+        onTriggered: visualizer.doStartCava()
+    }
+
     function startCava() {
+        restartTimer.restart();
+    }
+
+    function doStartCava() {
         stopCava();
-        cavaTag = "mpi" + Math.floor(Math.random() * 1e9);
+        // Zero-padded to a fixed width: equal-length tags can never be a
+        // substring of one another, so the stop pkill and the helper's temp
+        // file sweep can't confuse two concurrent instances (the panel and the
+        // popup each run their own).
+        cavaTag = "mpi" + ("00000000" + Math.floor(Math.random() * 1e9)).slice(-9);
         cavaOut = "/tmp/mpi-cava-" + cavaTag + ".dat";
-        cavaCtl.connectSource("sh \"" + helperPath + "\" " + barCount + " " + cavaTag + " \"" + cavaSource + "\"");
+        cavaCtl.connectSource("sh \"" + helperPath + "\" " + barCount + " " + cavaTag
+            + " \"" + cavaSource + "\" " + vizId);
     }
 
     onWantCavaChanged: wantCava ? startCava() : stopCava()
