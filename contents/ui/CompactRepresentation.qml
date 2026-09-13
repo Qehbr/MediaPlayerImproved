@@ -91,8 +91,15 @@ Loader {
             return CompactRepresentation.AlbumArtPresentation.Hide;
         } else if (presentation === "manual") {
             return CompactRepresentation.AlbumArtPresentation.Manual;
+        } else if (presentation === "auto") {
+            return CompactRepresentation.AlbumArtPresentation.Auto;
         }
-        return CompactRepresentation.AlbumArtPresentation.Auto;
+        // Never chosen. This setting replaced a lone size where 0 meant
+        // automatic, so read that the way it used to be read: a widget already
+        // carrying a size keeps it instead of quietly reverting to automatic.
+        return plasmoid.configuration.compactAlbumArtSize > 0
+            ? CompactRepresentation.AlbumArtPresentation.Manual
+            : CompactRepresentation.AlbumArtPresentation.Auto;
     }
 
     // Fixed album art size in pixels

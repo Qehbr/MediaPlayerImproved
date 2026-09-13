@@ -110,21 +110,35 @@ KCM.SimpleKCM {
                 { text: i18n("Set size"), value: "manual" },
             ]
             textRole: "text"
-            currentIndex: {
-                const pos = configGeneral.cfg_compactAlbumArt
-                const idx = model.findIndex(item => item.value === pos)
-                return idx >= 0 ? idx : 0
+            // Show what the widget is actually doing. An empty setting means
+            // this was never chosen, in which case a size carried over from
+            // before still decides, the same way the widget reads it.
+            readonly property string effectiveValue: {
+                const stored = configGeneral.cfg_compactAlbumArt
+                if (stored === "hide" || stored === "auto" || stored === "manual") {
+                    return stored
+                }
+                return configGeneral.cfg_compactAlbumArtSize > 0 ? "manual" : "auto"
             }
+            currentIndex: model.findIndex(item => item.value === compactAlbumArt.effectiveValue)
             onActivated: {
                 configGeneral.cfg_compactAlbumArt = model[currentIndex].value
+                // Coming from automatic there is no size to show yet, so give
+                // "Set size" something usable instead of a zero-height sliver.
+                if (model[currentIndex].value === "manual" && configGeneral.cfg_compactAlbumArtSize < 1) {
+                    configGeneral.cfg_compactAlbumArtSize = 25
+                }
             }
         }
 
         QQC2.SpinBox {
             id: compactAlbumArtSize
-            enabled: configGeneral.cfg_compactAlbumArt === "manual"
+            enabled: compactAlbumArt.effectiveValue === "manual"
             Kirigami.FormData.label: i18n("Album art size (px):")
-            from: 1
+            // Starts at 0 rather than 1 so that merely opening this dialog
+            // cannot round an unset 0 up to 1 and write it back, which would
+            // read afterwards as a size the user had deliberately chosen.
+            from: 0
             to: 256
             stepSize: 5
         }
