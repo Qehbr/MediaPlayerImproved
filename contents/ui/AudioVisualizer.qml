@@ -9,6 +9,8 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.plasma5support as Plasma5Support
 
+import "../code/colorsource.js" as ColorSource
+
 Item {
     id: visualizer
 
@@ -24,7 +26,15 @@ Item {
     readonly property int barCount: Math.max(4, rawBarCount - (rawBarCount % 2))
 
     property bool isPlaying: root.isPlaying
-    property color barColor: plasmoid.configuration.visualizerColor ? plasmoid.configuration.visualizerColor : Kirigami.Theme.highlightColor
+
+    // Supplied by whoever places the visualizer, since only they can see the
+    // album art item the colour has to be read from.
+    property color artColor: Kirigami.Theme.highlightColor
+
+    property color barColor: ColorSource.resolve(plasmoid.configuration.visualizerColorSource,
+                                                 plasmoid.configuration.visualizerColor,
+                                                 visualizer.artColor,
+                                                 Kirigami.Theme.highlightColor)
 
     implicitHeight: plasmoid.configuration.visualizerHeight || 30
 

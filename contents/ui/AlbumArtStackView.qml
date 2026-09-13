@@ -43,6 +43,25 @@ Item {
     }
 
     /**
+     * Colours pulled out of the artwork on show, for the parts of the widget
+     * that can be set to follow it.
+     *
+     * Only the item actually being rendered can be analysed: artwork that has
+     * merely been loaded, or that lives behind a remote URL, cannot. That is
+     * why this reads the StackView's current item rather than root.albumArt.
+     * When there is nothing to read -- artwork hidden, system tray, icon-only
+     * -- ImageColors hands back the theme's own colours, which is exactly the
+     * fallback we want, so no special casing is needed for it.
+     */
+    Kirigami.ImageColors {
+        id: artColors
+        source: albumArt.currentItem
+    }
+    readonly property color artAccentColor: artColors.highlight
+    readonly property color artDominantColor: artColors.dominant
+    readonly property color artContrastColor: artColors.dominantContrast
+
+    /**
      * Whether the component is used in the compact representation
      */
     property bool inCompactRepresentation: false

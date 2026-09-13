@@ -30,6 +30,7 @@ KCM.SimpleKCM {
     property alias cfg_compactControlsSize: compactControlsSize.value
     property alias cfg_compactProgressHeight: compactProgressHeight.value
     property string cfg_compactProgressColor
+    property string cfg_compactProgressColorSource
     property string cfg_compactControlsPosition
     property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
@@ -45,6 +46,7 @@ KCM.SimpleKCM {
     property alias cfg_visualizerHeight: visualizerHeight.value
     property alias cfg_visualizerBars: visualizerBars.value
     property string cfg_visualizerColor
+    property string cfg_visualizerColorSource
     property alias cfg_visualizerBehindOpacity: visualizerBehindOpacity.value
 
     Kirigami.FormLayout {
@@ -210,22 +212,38 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Progress bar color:")
             enabled: compactShowProgress.checked
 
+            QQC2.ComboBox {
+                id: progressColorSource
+                model: [
+                    { text: i18n("Theme default"), value: "theme" },
+                    { text: i18n("From album art"), value: "art" },
+                    { text: i18n("Custom"), value: "custom" }
+                ]
+                textRole: "text"
+                // Empty means never chosen, in which case a colour already set
+                // means it was custom -- the way it worked before this existed.
+                readonly property string effectiveValue: {
+                    const stored = configGeneral.cfg_compactProgressColorSource
+                    if (stored === "theme" || stored === "art" || stored === "custom") {
+                        return stored
+                    }
+                    return configGeneral.cfg_compactProgressColor ? "custom" : "theme"
+                }
+                currentIndex: model.findIndex(item => item.value === progressColorSource.effectiveValue)
+                onActivated: {
+                    configGeneral.cfg_compactProgressColorSource = model[currentIndex].value
+                    if (model[currentIndex].value === "custom" && !configGeneral.cfg_compactProgressColor) {
+                        configGeneral.cfg_compactProgressColor = progressColorButton.color
+                    }
+                }
+            }
             KQuickControls.ColorButton {
                 id: progressColorButton
-                enabled: !progressThemeColor.checked
+                visible: progressColorSource.effectiveValue === "custom"
                 showAlphaChannel: false
                 dialogTitle: i18n("Select Progress Bar Color")
                 color: configGeneral.cfg_compactProgressColor ? configGeneral.cfg_compactProgressColor : Kirigami.Theme.highlightColor
-                onAccepted: {
-                    progressThemeColor.checked = false;
-                    configGeneral.cfg_compactProgressColor = color;
-                }
-            }
-            QQC2.CheckBox {
-                id: progressThemeColor
-                text: i18n("Use theme default")
-                checked: !configGeneral.cfg_compactProgressColor
-                onToggled: configGeneral.cfg_compactProgressColor = checked ? "" : progressColorButton.color
+                onAccepted: configGeneral.cfg_compactProgressColor = color
             }
         }
 
@@ -428,22 +446,36 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Bar color:")
             enabled: enableVisualizer.checked
 
+            QQC2.ComboBox {
+                id: visualizerColorSource
+                model: [
+                    { text: i18n("Theme default"), value: "theme" },
+                    { text: i18n("From album art"), value: "art" },
+                    { text: i18n("Custom"), value: "custom" }
+                ]
+                textRole: "text"
+                readonly property string effectiveValue: {
+                    const stored = configGeneral.cfg_visualizerColorSource
+                    if (stored === "theme" || stored === "art" || stored === "custom") {
+                        return stored
+                    }
+                    return configGeneral.cfg_visualizerColor ? "custom" : "theme"
+                }
+                currentIndex: model.findIndex(item => item.value === visualizerColorSource.effectiveValue)
+                onActivated: {
+                    configGeneral.cfg_visualizerColorSource = model[currentIndex].value
+                    if (model[currentIndex].value === "custom" && !configGeneral.cfg_visualizerColor) {
+                        configGeneral.cfg_visualizerColor = visualizerColorButton.color
+                    }
+                }
+            }
             KQuickControls.ColorButton {
                 id: visualizerColorButton
-                enabled: !visualizerThemeColor.checked
+                visible: visualizerColorSource.effectiveValue === "custom"
                 showAlphaChannel: false
                 dialogTitle: i18n("Select Bar Color")
                 color: configGeneral.cfg_visualizerColor ? configGeneral.cfg_visualizerColor : Kirigami.Theme.highlightColor
-                onAccepted: {
-                    visualizerThemeColor.checked = false;
-                    configGeneral.cfg_visualizerColor = color;
-                }
-            }
-            QQC2.CheckBox {
-                id: visualizerThemeColor
-                text: i18n("Use theme default")
-                checked: !configGeneral.cfg_visualizerColor
-                onToggled: configGeneral.cfg_visualizerColor = checked ? "" : visualizerColorButton.color
+                onAccepted: configGeneral.cfg_visualizerColor = color
             }
         }
     }

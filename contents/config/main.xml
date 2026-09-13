@@ -63,6 +63,12 @@
     <entry name="compactProgressColor" type="String">
       <default></default>
     </entry>
+    <!-- theme | art | custom. Empty means never chosen, in which case the
+         colour key beside it still decides, the way it did before this
+         existed: a colour already set means custom, none means theme. -->
+    <entry name="compactProgressColorSource" type="String">
+      <default></default>
+    </entry>
     <entry name="compactControlsPosition" type="String">
       <default>auto</default>
     </entry>
@@ -115,6 +121,10 @@
       <max>50</max>
     </entry>
     <entry name="visualizerColor" type="String">
+      <default></default>
+    </entry>
+    <!-- theme | art | custom; empty migrates from visualizerColor as above. -->
+    <entry name="visualizerColorSource" type="String">
       <default></default>
     </entry>
     <entry name="visualizerBehindOpacity" type="Double">

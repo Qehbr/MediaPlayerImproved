@@ -13,6 +13,8 @@ import org.kde.plasma.components as PC3
 import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
 
+import "../code/colorsource.js" as ColorSource
+
 /**
  * [Album Art][Now Playing]
  */
@@ -196,7 +198,10 @@ Loader {
             // Appearance / placement settings
             readonly property int controlsSize: plasmoid.configuration.compactControlsSize || Kirigami.Units.iconSizes.smallMedium
             readonly property int progressBarHeight: plasmoid.configuration.compactProgressHeight || 6
-            readonly property color progressColor: plasmoid.configuration.compactProgressColor ? plasmoid.configuration.compactProgressColor : Kirigami.Theme.highlightColor
+            readonly property color progressColor: ColorSource.resolve(plasmoid.configuration.compactProgressColorSource,
+                                                        plasmoid.configuration.compactProgressColor,
+                                                        albumArt.artAccentColor,
+                                                        Kirigami.Theme.highlightColor)
             readonly property bool controlsVertical: plasmoid.configuration.compactControlsOrientation === "vertical"
             readonly property bool progressFirst: plasmoid.configuration.compactProgressFirst !== false
             // Controls and progress bar are positioned independently. Each maps
@@ -412,6 +417,7 @@ Loader {
             AudioVisualizer {
                 id: leftVisualizer
                 role: "compactleft"
+                artColor: albumArt.artAccentColor
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
@@ -458,6 +464,7 @@ Loader {
                 AudioVisualizer {
                     id: behindVisualizer
                     role: "compactbehind"
+                    artColor: albumArt.artAccentColor
                     anchors.fill: parent
                     visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
                     opacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
@@ -535,6 +542,7 @@ Loader {
                     AudioVisualizer {
                         id: bottomVisualizer
                         role: "compactbottom"
+                        artColor: albumArt.artAccentColor
                         Layout.fillWidth: true
                         // Never taller than the room left over, so the bars
                         // stay inside the panel instead of pushing the rest of
@@ -561,6 +569,7 @@ Loader {
             AudioVisualizer {
                 id: rightVisualizer
                 role: "compactright"
+                artColor: albumArt.artAccentColor
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "right")
