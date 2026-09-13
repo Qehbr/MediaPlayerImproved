@@ -33,8 +33,13 @@ jobs:
           VER=$(python3 -c "import json; print(json.load(open('metadata.json'))['KPlugin']['Version'])")
           echo "Tag version: $TAG / metadata.json version: $VER"
           if [ "$TAG" != "$VER" ]; then
-            echo "::warning::Tag ($TAG) does not match metadata.json Version ($VER). Consider bumping the Version field."
+            echo "::error::Tag ($TAG) does not match metadata.json Version ($VER)."
+            echo "The version shipped inside the package is the one users see, so a"
+            echo "mismatch here publishes a release labelled differently from its"
+            echo "contents. Bump KPlugin.Version, or retag to match it."
+            exit 1
           fi
+          echo "Tag and package version agree."
 
       - name: Build .plasmoid
         run: |
