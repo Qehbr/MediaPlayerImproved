@@ -34,6 +34,7 @@ KCM.SimpleKCM {
     property string cfg_compactProgressPosition
     property string cfg_compactControlsOrientation
     property alias cfg_compactProgressFirst: compactProgressFirst.checked
+    property string cfg_compactAlbumArt
     property alias cfg_compactAlbumArtSize: compactAlbumArtSize.value
     property alias cfg_enableVisualizer: enableVisualizer.checked
     property alias cfg_visualizerUseRealAudio: visualizerUseRealAudio.checked
@@ -100,15 +101,46 @@ KCM.SimpleKCM {
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
+        QQC2.ComboBox {
+            id: compactAlbumArt
+            Kirigami.FormData.label: i18n("Album art:")
+            model: [
+                { text: i18n("Hide"), value: "hide" },
+                { text: i18n("Automatic"), value: "auto" },
+                { text: i18n("Set size"), value: "manual" },
+            ]
+            textRole: "text"
+            // Show what the widget is actually doing. An empty setting means
+            // this was never chosen, in which case a size carried over from
+            // before still decides, the same way the widget reads it.
+            readonly property string effectiveValue: {
+                const stored = configGeneral.cfg_compactAlbumArt
+                if (stored === "hide" || stored === "auto" || stored === "manual") {
+                    return stored
+                }
+                return configGeneral.cfg_compactAlbumArtSize > 0 ? "manual" : "auto"
+            }
+            currentIndex: model.findIndex(item => item.value === compactAlbumArt.effectiveValue)
+            onActivated: {
+                configGeneral.cfg_compactAlbumArt = model[currentIndex].value
+                // Coming from automatic there is no size to show yet, so give
+                // "Set size" something usable instead of a zero-height sliver.
+                if (model[currentIndex].value === "manual" && configGeneral.cfg_compactAlbumArtSize < 1) {
+                    configGeneral.cfg_compactAlbumArtSize = 25
+                }
+            }
+        }
+
         QQC2.SpinBox {
             id: compactAlbumArtSize
+            enabled: compactAlbumArt.effectiveValue === "manual"
             Kirigami.FormData.label: i18n("Album art size (px):")
+            // Starts at 0 rather than 1 so that merely opening this dialog
+            // cannot round an unset 0 up to 1 and write it back, which would
+            // read afterwards as a size the user had deliberately chosen.
             from: 0
             to: 256
             stepSize: 5
-            QQC2.ToolTip.text: i18n("0 = automatic (fill the available panel thickness)")
-            QQC2.ToolTip.visible: hovered
-            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         QQC2.CheckBox {

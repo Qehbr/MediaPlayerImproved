@@ -75,6 +75,12 @@
     <entry name="compactProgressFirst" type="Bool">
       <default>true</default>
     </entry>
+    <!-- Empty means the user has never chosen, so the setting this one
+         replaced still decides: a size carried over from before is honoured
+         rather than silently reverting that widget to automatic. -->
+    <entry name="compactAlbumArt" type="String">
+      <default></default>
+    </entry>
     <entry name="compactAlbumArtSize" type="Int">
       <default>0</default>
       <min>0</min>
