@@ -20,6 +20,8 @@ import org.kde.coreaddons as KCoreAddons
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.private.mpris as Mpris
 
+import "../code/colorsource.js" as ColorSource
+
 PlasmaExtras.Representation {
     id: expandedRepresentation
 
@@ -49,6 +51,52 @@ PlasmaExtras.Representation {
     // readable on a dark one.
     readonly property bool overArtBackdrop: backgroundImage.visible
         && backgroundImage.width > 0 && backgroundImage.height > 0
+
+    // What sits behind the track details: the blurred cover as before, a flat
+    // colour taken from the cover, the theme's own background, or one picked
+    // by hand.
+    readonly property string backgroundSource: {
+        const stored = plasmoid.configuration.expandedBackgroundSource;
+        if (stored === "art" || stored === "theme" || stored === "custom") {
+            return stored;
+        }
+        return "artwork";
+    }
+    readonly property bool overFlatBackground: backgroundSource === "art" || backgroundSource === "custom"
+    readonly property color flatBackgroundColor: backgroundSource === "art"
+        ? albumArt.artDominantColor
+        : (plasmoid.configuration.expandedBackgroundColor || Kirigami.Theme.backgroundColor)
+
+    // Whatever ends up behind the text decides what colour the text can be.
+    readonly property color detailsTextColor: {
+        if (overArtBackdrop) {
+            return "white";
+        }
+        if (overFlatBackground) {
+            return ColorSource.readableOn(Kirigami.Theme.textColor, flatBackgroundColor);
+        }
+        return Kirigami.Theme.textColor;
+    }
+    // One colour for the standard controls -- the seek slider, the button
+    // highlights and their borders -- which read the theme's highlight colour
+    // rather than anything of ours. Overriding that colour for the subtree is
+    // the only way to reach them without reimplementing each control.
+    readonly property color accentColor: ColorSource.resolve(
+        plasmoid.configuration.accentColorSource,
+        plasmoid.configuration.accentColor,
+        albumArt.artAccentColor,
+        Kirigami.Theme.highlightColor)
+
+    readonly property bool accentIsCustom: plasmoid.configuration.accentColorSource === "art"
+        || plasmoid.configuration.accentColorSource === "custom"
+
+    // Shared with the compact progress bar, by the same setting.
+    readonly property color progressColor: ColorSource.resolve(
+        plasmoid.configuration.compactProgressColorSource,
+        plasmoid.configuration.compactProgressColor,
+        albumArt.artAccentColor,
+        Kirigami.Theme.highlightColor)
+
     readonly property var appletInterface: root
     property real rate: mpris2Model.currentPlayer?.rate ?? 1
     property double length: mpris2Model.currentPlayer?.length ?? 0
@@ -256,6 +304,13 @@ PlasmaExtras.Representation {
             }
         }
 
+        Rectangle {
+            // Flat background for the "from album art" and custom
+            // choices; the blurred cover above is hidden for those.
+            anchors.fill: parent
+            visible: expandedRepresentation.overFlatBackground
+            color: expandedRepresentation.flatBackgroundColor
+        }
         ShaderEffect {
             id: backgroundImage
             property real scaleFactor: 1.0
@@ -266,6 +321,7 @@ PlasmaExtras.Representation {
 
             anchors.centerIn: parent
             visible: (albumArt.animating || albumArt.hasImage) && !expandedRepresentation.softwareRendering
+                && expandedRepresentation.backgroundSource === "artwork"
 
             layer.enabled: !expandedRepresentation.softwareRendering
             layer.effect: HueSaturation {
@@ -365,7 +421,7 @@ PlasmaExtras.Representation {
                     id: songTitle
                     level: 1
 
-                    color: expandedRepresentation.overArtBackdrop ? "white" : Kirigami.Theme.textColor
+                    color: expandedRepresentation.detailsTextColor
 
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
@@ -382,7 +438,7 @@ PlasmaExtras.Representation {
                     visible: root.artist
                     level: 2
 
-                    color: expandedRepresentation.overArtBackdrop ? "white" : Kirigami.Theme.textColor
+                    color: expandedRepresentation.detailsTextColor
 
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
@@ -394,7 +450,7 @@ PlasmaExtras.Representation {
                     Layout.maximumHeight: Kirigami.Units.gridUnit * 2
                 }
                 Kirigami.Heading { // Song Album
-                    color: expandedRepresentation.overArtBackdrop ? "white" : Kirigami.Theme.textColor
+                    color: expandedRepresentation.detailsTextColor
 
                     level: 3
                     opacity: 0.75
@@ -422,9 +478,19 @@ PlasmaExtras.Representation {
         position: PlasmaComponents3.ToolBar.Footer
         ColumnLayout { // Main Column Layout
             anchors.fill: parent
+
+            // Tints the seek slider and the playback buttons.
+            Kirigami.Theme.inherit: false
+            Kirigami.Theme.highlightColor: expandedRepresentation.accentColor
             RowLayout { // Seek Bar
                 spacing: Kirigami.Units.smallSpacing
                 Layout.minimumHeight: playbackRateMetricsButton.implicitHeight
+
+                // Deliberately not the accent: this is the same track position
+                // the compact progress bar shows, so one setting drives both
+                // rather than the popup's copy drifting to the accent colour.
+                Kirigami.Theme.inherit: false
+                Kirigami.Theme.highlightColor: expandedRepresentation.progressColor
 
                 // if there's no "mpris:length" in the metadata, we cannot seek, so hide it in that case
                 enabled: playerList.count > 0 && root.track.length > 0 && expandedRepresentation.length > 0 ? true : false
@@ -880,6 +946,16 @@ PlasmaExtras.Representation {
             id: playerSelector
             objectName: "playerSelector"
 
+            // Both the bar's highlight and each button's background are
+            // FrameSvgItems from the Plasma style, and the only highlight
+            // colour TabButton reads is a keyboard-focus underline, so the
+            // current-tab marker cannot be recoloured through the theme at
+            // all. Drop the styled one and draw our own below instead, but
+            // only once the accent has been changed away from the theme.
+            Component.onCompleted: if (expandedRepresentation.accentIsCustom && contentItem) {
+                contentItem.highlight = null;
+            }
+
             anchors.fill: parent
             implicitHeight: contentHeight
             currentIndex: playerSelector.count, mpris2Model.currentIndex
@@ -934,6 +1010,24 @@ PlasmaExtras.Representation {
                     PlasmaComponents3.ToolTip.text: text
                     PlasmaComponents3.ToolTip.delay: Kirigami.Units.toolTipDelay
                     PlasmaComponents3.ToolTip.visible: hovered || (activeFocus && (focusReason === Qt.TabFocusReason || focusReason === Qt.BacktabFocusReason))
+                }
+            }
+        }
+
+        Rectangle {
+            id: accentTabMarker
+            z: 10
+            visible: expandedRepresentation.accentIsCustom && playerSelector.currentItem !== null
+            color: expandedRepresentation.accentColor
+            height: Math.max(2, Math.round(Kirigami.Units.smallSpacing / 2))
+            width: playerSelector.currentItem ? playerSelector.currentItem.width : 0
+            x: playerSelector.x + (playerSelector.currentItem ? playerSelector.currentItem.x : 0)
+            y: playerSelector.y + playerSelector.height - height
+
+            Behavior on x {
+                NumberAnimation {
+                    duration: Kirigami.Units.longDuration
+                    easing.type: Easing.InOutQuad
                 }
             }
         }

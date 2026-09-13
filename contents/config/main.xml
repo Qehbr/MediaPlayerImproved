@@ -69,6 +69,36 @@
     <entry name="compactProgressColorSource" type="String">
       <default></default>
     </entry>
+    <!-- theme | art | custom, for the track title and artist in the panel. -->
+    <entry name="compactTextColorSource" type="String">
+      <default>theme</default>
+    </entry>
+    <entry name="compactTextColor" type="String">
+      <default></default>
+    </entry>
+    <!-- How far the art colour is taken towards the artwork, 0 leaving the
+         theme's own text colour and 100 following the cover exactly. -->
+    <entry name="compactTextArtStrength" type="Int">
+      <default>100</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
+    <!-- artwork (the blurred cover, as before) | art | theme | custom -->
+    <entry name="expandedBackgroundSource" type="String">
+      <default>artwork</default>
+    </entry>
+    <entry name="expandedBackgroundColor" type="String">
+      <default></default>
+    </entry>
+    <!-- theme | art | custom. Overrides the highlight colour the standard
+         controls read, which is what tints the seek slider, the button
+         highlights and their borders in both views. -->
+    <entry name="accentColorSource" type="String">
+      <default>theme</default>
+    </entry>
+    <entry name="accentColor" type="String">
+      <default></default>
+    </entry>
     <entry name="compactControlsPosition" type="String">
       <default>auto</default>
     </entry>

@@ -45,7 +45,14 @@ Loader {
 
     // How much width the album art occupies. Both width limits below budget for
     // it on top of the text area, so they follow the fixed size when there is one.
-    readonly property int albumArtExtent: albumArtPresentation === AlbumArtPresentation.Hide ? 0 : (albumArtPresentation === AlbumArtPresentation.Manual ? albumArtManualSize : compactRepresentation.height)
+    // The enum has to be reached through the type, not bare: unqualified it is
+    // simply undefined, and the whole binding throws rather than falling back
+    // to anything sensible.
+    readonly property int albumArtExtent: albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Hide
+        ? 0
+        : (albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual
+            ? albumArtManualSize
+            : compactRepresentation.height)
 
     Layout.maximumWidth: layoutForm === CompactRepresentation.LayoutType.HorizontalPanel ? (Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) + compactRepresentation.albumArtExtent + Kirigami.Units.smallSpacing) : -1
 
@@ -195,7 +202,26 @@ Loader {
             readonly property bool showControls: extrasAllowed && plasmoid.configuration.compactShowControls === true
             readonly property bool showProgress: extrasAllowed && plasmoid.configuration.compactShowProgress === true && trackLength > 0
 
+            // The theme's own highlight, captured here where it is still
+            // untouched. Read inside the override below it would be the
+            // property being assigned, which is a binding loop.
+            readonly property color themeHighlightColor: Kirigami.Theme.highlightColor
+
             // Appearance / placement settings
+            // Panel text colour. Artwork owes the panel no contrast at all, so
+            // a colour taken from it is walked away from the panel background
+            // until it is legible rather than used raw.
+            // Blended towards the theme's own text colour first, so the
+            // strength setting can mute a loud cover, then pushed away from the
+            // background if that blend still would not read.
+            readonly property color textColor: ColorSource.resolve(
+                plasmoid.configuration.compactTextColorSource,
+                plasmoid.configuration.compactTextColor,
+                ColorSource.readableOn(
+                    ColorSource.mix(Kirigami.Theme.textColor, albumArt.artAccentColor,
+                                    (plasmoid.configuration.compactTextArtStrength ?? 100) / 100),
+                    Kirigami.Theme.backgroundColor),
+                Kirigami.Theme.textColor)
             readonly property int controlsSize: plasmoid.configuration.compactControlsSize || Kirigami.Units.iconSizes.smallMedium
             readonly property int progressBarHeight: plasmoid.configuration.compactProgressHeight || 6
             readonly property color progressColor: ColorSource.resolve(plasmoid.configuration.compactProgressColorSource,
@@ -281,6 +307,16 @@ Loader {
                 id: extrasComponent
                 GridLayout {
                     id: block
+
+                    // Same accent as the popup's controls, for the compact
+                    // playback buttons.
+                    Kirigami.Theme.inherit: false
+                    Kirigami.Theme.highlightColor: ColorSource.resolve(
+                        plasmoid.configuration.accentColorSource,
+                        plasmoid.configuration.accentColor,
+                        albumArt.artAccentColor,
+                        grid.themeHighlightColor)
+
                     // Which slot this block instance occupies (set by its Loader).
                     property string slot: ""
                     // Show each part only if its configured position maps here.
@@ -490,6 +526,8 @@ Loader {
                     ScrollingLabel {
                         id: songTitle
 
+                        color: grid.textColor
+
                         Layout.fillWidth: true
 
                         elide: Text.ElideRight
@@ -512,6 +550,8 @@ Loader {
                     // Song Artist
                     ScrollingLabel {
                         id: songArtist
+
+                        color: grid.textColor
 
                         Layout.fillWidth: true
                         visible: root.artist.length > 0 && compactRepresentation.height >= songTitle.implicitHeight + implicitHeight * 0.8 /* For CJK */ + (compactRepresentation.layoutForm === CompactRepresentation.LayoutType.VerticalDesktop ? albumArt.height + grid.rowSpacing : 0)
