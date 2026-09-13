@@ -8,12 +8,17 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 
 ## Features
 
+### Expanded Representation
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Popup background | Blurred album art | Blurred album art, a flat color from the album art, the theme default, or a custom color |
+
 ### Audio Visualizer
 - Animated frequency bars, with an optional **real audio-reactive** mode powered by [`cava`](https://github.com/karlstav/cava) (falls back to a simple animation if cava isn't installed)
 - Visible in both the compact (panel) and expanded (popup) views
 - Four position options in compact mode: **Bottom**, **Left**, **Right**, or **Behind** text
 - Configurable bar count (5–50) and height (10–100 px)
-- Full color picker for the bars (or theme default)
+- Bar color from the theme, the album art, or a color picker
 - "Behind" mode renders bars beneath the text with adjustable opacity for a subtle depth effect
 - Bars fade when paused and animate smoothly when playing
 
@@ -26,7 +31,10 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 ### Wider & Customizable Layout
 - Configurable maximum width for the compact panel widget (5–100 grid units)
 - Album art with smooth transitions between tracks, at panel height or a fixed pixel size
-- Blurred album art background in the expanded view
+- Blurred album art background in the expanded view, or a flat color taken from the art
+- Bars, progress bar, track text, popup background and the accent color used by the
+  seek slider and buttons can each follow the album art's colors
+  (needs artwork on screen to read, so hidden artwork and the system tray fall back to the theme)
 - Customizable placeholder icon shown when a track has no album art
 - Responsive layout that adapts to horizontal panels, vertical panels, and desktop placement
 
@@ -110,7 +118,7 @@ After installing, add the widget to your panel:
 
 ## Configuration
 
-Right-click the widget → **Configure Media Player Improved** to open the settings dialog.
+Right-click the widget → **Configure Media Player Improved** to open the settings dialog. Settings are split into four pages.
 
 ### General
 | Setting | Default | Description |
@@ -119,7 +127,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Hide when idle | Disabled | Hide the widget entirely when nothing is playing |
 | No-artwork icon | `applications-multimedia` | Icon shown when a track has no album art |
 
-### Compact Representation
+### Compact View
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Maximum width | 20 | Max widget width in grid units (5–100) |
@@ -133,13 +141,12 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Button icon size | 22 px | Control button icon size (12–64) |
 | Progress bar | Disabled | Show a read-only track progress bar |
 | Progress bar height | 6 px | Progress bar thickness (2–24) |
-| Progress bar color | Theme default | Full color picker or theme default |
 | Controls position | Automatic | Auto / Left / Right / Above / Below the track |
 | Progress bar position | Automatic | Independent of controls — Auto / Left / Right / Above / Below |
 | Button layout | Horizontal | Buttons in a row or a vertical stack |
 | Block order | Progress above | Progress bar above or below the controls |
 
-### Audio Visualizer
+### Visualizer
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Enable visualizer | Enabled | Master on/off toggle |
@@ -147,11 +154,23 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | cava source | Automatic | Audio source the bars react to — pick from detected devices, or the default output |
 | Show in compact view | Enabled | Visualizer in the panel widget |
 | Position (compact) | Bottom | Bottom / Left / Right / Behind |
+| Behind opacity | 0.3 | Opacity when using "Behind" position (0.1–1.0) |
 | Show in expanded view | Enabled | Visualizer in the popup |
 | Height | 30 px | Bar height in pixels (10–100) |
 | Number of bars | 20 | Bar count (5–50) |
-| Bar color | Theme default | Full color picker or theme default |
-| Behind opacity | 0.3 | Opacity when using "Behind" position (0.1–1.0) |
+
+### Colors
+Each of these can follow the theme, the album art, or a color you pick. Album art colors are
+read from the artwork on screen, so hidden artwork and the system tray fall back to the theme.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Accent color | Theme default | Playback buttons and the popup's player tabs, in both views |
+| Progress color | Theme default | The compact progress bar and the popup's seek slider |
+| Track text color | Theme default | Track title and artist in the panel. Art colors are lightened or darkened as needed to stay readable |
+| Text color strength | 100% | How far the text is taken towards the album art's color. Lower values stay closer to the theme's text color |
+| Bar color | Theme default | Visualizer bars. Theme default follows the accent color |
+| Popup background | Blurred album art | Blurred album art, a flat color from the album art, the theme default, or a custom color |
 
 ---
 

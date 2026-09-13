@@ -13,4 +13,19 @@ ConfigModel {
         icon: "configure"
         source: "configGeneral.qml"
     }
+    ConfigCategory {
+        name: i18nc("@title", "Compact View")
+        icon: "view-media-track"
+        source: "configCompact.qml"
+    }
+    ConfigCategory {
+        name: i18nc("@title", "Visualizer")
+        icon: "view-media-visualization"
+        source: "configVisualizer.qml"
+    }
+    ConfigCategory {
+        name: i18nc("@title", "Colors")
+        icon: "color-management"
+        source: "configColors.qml"
+    }
 }

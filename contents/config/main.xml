@@ -63,6 +63,42 @@
     <entry name="compactProgressColor" type="String">
       <default></default>
     </entry>
+    <!-- theme | art | custom. Empty means never chosen, in which case the
+         colour key beside it still decides, the way it did before this
+         existed: a colour already set means custom, none means theme. -->
+    <entry name="compactProgressColorSource" type="String">
+      <default></default>
+    </entry>
+    <!-- theme | art | custom, for the track title and artist in the panel. -->
+    <entry name="compactTextColorSource" type="String">
+      <default>theme</default>
+    </entry>
+    <entry name="compactTextColor" type="String">
+      <default></default>
+    </entry>
+    <!-- How far the art colour is taken towards the artwork, 0 leaving the
+         theme's own text colour and 100 following the cover exactly. -->
+    <entry name="compactTextArtStrength" type="Int">
+      <default>100</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
+    <!-- artwork (the blurred cover, as before) | art | theme | custom -->
+    <entry name="expandedBackgroundSource" type="String">
+      <default>artwork</default>
+    </entry>
+    <entry name="expandedBackgroundColor" type="String">
+      <default></default>
+    </entry>
+    <!-- theme | art | custom. Overrides the highlight colour the standard
+         controls read, which is what tints the seek slider, the button
+         highlights and their borders in both views. -->
+    <entry name="accentColorSource" type="String">
+      <default>theme</default>
+    </entry>
+    <entry name="accentColor" type="String">
+      <default></default>
+    </entry>
     <entry name="compactControlsPosition" type="String">
       <default>auto</default>
     </entry>
@@ -115,6 +151,10 @@
       <max>50</max>
     </entry>
     <entry name="visualizerColor" type="String">
+      <default></default>
+    </entry>
+    <!-- theme | art | custom; empty migrates from visualizerColor as above. -->
+    <entry name="visualizerColorSource" type="String">
       <default></default>
     </entry>
     <entry name="visualizerBehindOpacity" type="Double">
