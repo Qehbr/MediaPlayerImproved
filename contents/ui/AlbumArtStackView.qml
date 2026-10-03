@@ -67,6 +67,13 @@ Item {
     property bool inCompactRepresentation: false
 
     /**
+     * Whether the artwork fills its box, cropping whatever does not fit, or is
+     * shrunk until all of it is inside. Only meaningful in the compact
+     * representation, where the box is not always the artwork's own shape.
+     */
+    property bool cropToFill: true
+
+    /**
      * Provides source item for \ShaderEffectSource
      */
     readonly property alias albumArt: albumArt
@@ -198,7 +205,7 @@ Item {
                 id: albumArtImage
                 horizontalAlignment: Image.AlignHCenter
                 verticalAlignment: Image.AlignVCenter
-                fillMode: container.inCompactRepresentation ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+                fillMode: (container.inCompactRepresentation && container.cropToFill) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
 
                 asynchronous: true
                 cache: false

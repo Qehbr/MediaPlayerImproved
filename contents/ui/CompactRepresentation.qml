@@ -111,6 +111,30 @@ Loader {
             : CompactRepresentation.AlbumArtPresentation.Auto;
     }
 
+    enum AlbumArtShape {
+        Crop,
+        Fit,
+        Match
+    }
+
+    readonly property int albumArtShape: {
+        const shape = plasmoid.configuration.compactAlbumArtShape;
+        if (shape === "crop") {
+            return CompactRepresentation.AlbumArtShape.Crop;
+        } else if (shape === "fit") {
+            return CompactRepresentation.AlbumArtShape.Fit;
+        }
+        return CompactRepresentation.AlbumArtShape.Match;
+    }
+
+    // Widest the artwork may get when it follows its own shape. A 16:9
+    // thumbnail is nearly twice as wide as it is tall, which on a panel eats
+    // the room the title and the bars need, so cap it at half of what the
+    // widget is allowed to be. Applies whatever the artwork's ratio is, so a
+    // panorama cannot push everything else out.
+    readonly property int albumArtWidthCap: Math.round(
+        Kirigami.Units.gridUnit * (plasmoid.configuration.compactMaxWidth || 15) / 2)
+
     // Fixed album art size in pixels
     // Clamped to the space the placement actually offers so an oversized value
     // can't overflow a thin panel.
@@ -414,12 +438,31 @@ Loader {
 
                 visible: compactRepresentation.albumArtPresentation !== CompactRepresentation.AlbumArtPresentation.Hide
 
-                // Shape of the artwork, so a wide thumbnail (video players hand
-                // us 16:9 ones) gets a wide box and is shown whole instead of
-                // being cropped to its centre by the square box it used to be
-                // given. Clamped so an extreme ratio cannot take over the panel;
-                // anything past the clamp is still cropped rather than letterboxed.
-                readonly property real displayAspect: Math.max(0.5, Math.min(2.5, albumArt.imageAspectRatio))
+                // How wide the box is relative to its height.
+                //
+                // Crop and Fit both keep the square box the artwork used to get
+                // and differ only in whether the artwork is cropped to fill it
+                // or shrunk to sit inside it. Match gives the box the artwork's
+                // own shape, which shows a wide thumbnail whole but spends the
+                // panel's width on it -- hence the cap, which stops a 16:9
+                // cover from crowding out the title and the bars.
+                readonly property real displayAspect: {
+                    if (compactRepresentation.albumArtShape !== CompactRepresentation.AlbumArtShape.Match) {
+                        return 1;
+                    }
+                    const wanted = Math.max(0.5, Math.min(2.5, albumArt.imageAspectRatio));
+                    const height = albumArt.sizedByHand
+                        ? compactRepresentation.albumArtManualSize
+                        : compactRepresentation.height;
+                    if (height > 0 && compactRepresentation.albumArtWidthCap > 0) {
+                        return Math.min(wanted, compactRepresentation.albumArtWidthCap / height);
+                    }
+                    return wanted;
+                }
+
+                // Fit is the one shape that must not crop: it trades the empty
+                // bands for showing the whole cover at a width that never moves.
+                cropToFill: compactRepresentation.albumArtShape !== CompactRepresentation.AlbumArtShape.Fit
 
                 readonly property bool sizedByHand: compactRepresentation.albumArtPresentation === CompactRepresentation.AlbumArtPresentation.Manual
 

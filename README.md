@@ -133,6 +133,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Maximum width | 20 | Max widget width in grid units (5–100) |
 | Minimum width | 0 | Min widget width in grid units (0 = automatic; set equal to max for a fixed width) |
 | Album art | Automatic | Hide / Automatic / Set size |
+| Album art shape | Match artwork | How non-square artwork is shaped: match the artwork, crop to a square, or fit whole inside a square. Artwork keeping its own shape is capped so it can't crowd out the track and bars |
 | Album art size | 25 | Fixed album art size in pixels (only used when **Album art** is *Set size*) |
 | Scrolling text | Enabled | Marquee animation for long text |
 | Scroll speed | 50 px/s | Text scroll speed (10–200) |
