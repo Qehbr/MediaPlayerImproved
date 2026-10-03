@@ -16,6 +16,7 @@ KCM.SimpleKCM {
     property alias cfg_compactMaxWidth: compactMaxWidth.value
     property alias cfg_compactMinWidth: compactMinWidth.value
     property string cfg_compactAlbumArt
+    property string cfg_compactAlbumArtShape
     property alias cfg_compactAlbumArtSize: compactAlbumArtSize.value
     property alias cfg_enableScrollingText: enableScrollingText.checked
     property alias cfg_scrollingTextSpeed: scrollingTextSpeed.value
@@ -85,6 +86,25 @@ KCM.SimpleKCM {
                     configCompact.cfg_compactAlbumArtSize = 25
                 }
             }
+        }
+
+        QQC2.ComboBox {
+            id: compactAlbumArtShape
+            Kirigami.FormData.label: i18n("Album art shape:")
+            enabled: compactAlbumArt.effectiveValue !== "hide"
+            model: [
+                { text: i18n("Match artwork"), value: "match" },
+                { text: i18n("Crop to square"), value: "crop" },
+                { text: i18n("Fit in square"), value: "fit" }
+            ]
+            textRole: "text"
+            currentIndex: Math.max(0, model.findIndex(item => item.value === configCompact.cfg_compactAlbumArtShape))
+            onActivated: {
+                configCompact.cfg_compactAlbumArtShape = model[currentIndex].value
+            }
+            QQC2.ToolTip.text: i18n("Non-square artwork, such as a 16:9 video thumbnail, can keep its own shape, be cropped to a square, or be fitted whole inside one. Artwork that keeps its shape is still capped so it cannot crowd out the track and the bars.")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         QQC2.SpinBox {
