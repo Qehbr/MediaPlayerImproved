@@ -49,6 +49,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - Optional read-only **progress bar** with configurable height and color
 - Fully arrangeable extras: position them **left / right / above / below** the track, lay the buttons out as a **row or a vertical stack**, and put the progress bar **above or below** the buttons
 - Optionally **hide the widget entirely** when nothing is playing
+- **Ignore specific players**, such as a browser, so they never show in the widget or keep it visible
 - Middle-click to play/pause
 - Scroll wheel to adjust volume
 - Mouse back/forward buttons for track navigation
@@ -121,6 +122,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 |---------|---------|-------------|
 | Volume step | 5% | How much each scroll tick changes volume (1–20%) |
 | Hide when idle | Disabled | Hide the widget entirely when nothing is playing |
+| Ignored players | None | Players left out as if they weren't running: not shown, no popup tab, and they don't keep a hidden-when-idle widget visible. Pick from the players currently running |
 | No-artwork icon | `applications-multimedia` | Icon shown when a track has no album art |
 
 ### Compact View

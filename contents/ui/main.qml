@@ -23,26 +23,26 @@ PlasmoidItem {
     readonly property int volumePercentStep: plasmoid.configuration.volumeStep
 
     // BEGIN model properties
-    readonly property string track: mpris2Model.currentPlayer?.track ?? ""
-    readonly property string artist: mpris2Model.currentPlayer?.artist ?? ""
-    readonly property string album: mpris2Model.currentPlayer?.album ?? ""
-    readonly property string albumArt: mpris2Model.currentPlayer?.artUrl ?? ""
-    readonly property string identity: mpris2Model.currentPlayer?.identity ?? ""
-    readonly property bool canControl: mpris2Model.currentPlayer?.canControl ?? false
-    readonly property bool canGoPrevious: mpris2Model.currentPlayer?.canGoPrevious ?? false
-    readonly property bool canGoNext: mpris2Model.currentPlayer?.canGoNext ?? false
-    readonly property bool canPlay: mpris2Model.currentPlayer?.canPlay ?? false
-    readonly property bool canPause: mpris2Model.currentPlayer?.canPause ?? false
-    readonly property bool canStop: mpris2Model.currentPlayer?.canStop ?? false
-    readonly property int playbackStatus: mpris2Model.currentPlayer?.playbackStatus ?? 0
+    readonly property string track: root.player?.track ?? ""
+    readonly property string artist: root.player?.artist ?? ""
+    readonly property string album: root.player?.album ?? ""
+    readonly property string albumArt: root.player?.artUrl ?? ""
+    readonly property string identity: root.player?.identity ?? ""
+    readonly property bool canControl: root.player?.canControl ?? false
+    readonly property bool canGoPrevious: root.player?.canGoPrevious ?? false
+    readonly property bool canGoNext: root.player?.canGoNext ?? false
+    readonly property bool canPlay: root.player?.canPlay ?? false
+    readonly property bool canPause: root.player?.canPause ?? false
+    readonly property bool canStop: root.player?.canStop ?? false
+    readonly property int playbackStatus: root.player?.playbackStatus ?? 0
     readonly property bool isPlaying: root.playbackStatus === Mpris.PlaybackStatus.Playing
-    readonly property bool canRaise: mpris2Model.currentPlayer?.canRaise ?? false
-    readonly property bool canQuit: mpris2Model.currentPlayer?.canQuit ?? false
-    readonly property int shuffle: mpris2Model.currentPlayer?.shuffle ?? 0
-    readonly property int loopStatus: mpris2Model.currentPlayer?.loopStatus ?? 0
-    readonly property real playbackRate: mpris2Model.currentPlayer?.rate ?? 1.0
-    readonly property real minimumPlaybackRate: mpris2Model.currentPlayer?.minimumRate ?? 1.0
-    readonly property real maximumPlaybackRate: mpris2Model.currentPlayer?.maximumRate ?? 1.0
+    readonly property bool canRaise: root.player?.canRaise ?? false
+    readonly property bool canQuit: root.player?.canQuit ?? false
+    readonly property int shuffle: root.player?.shuffle ?? 0
+    readonly property int loopStatus: root.player?.loopStatus ?? 0
+    readonly property real playbackRate: root.player?.rate ?? 1.0
+    readonly property real minimumPlaybackRate: root.player?.minimumRate ?? 1.0
+    readonly property real maximumPlaybackRate: root.player?.maximumRate ?? 1.0
     // END model properties
 
     Plasmoid.icon: switch (root.playbackStatus) {
@@ -54,9 +54,10 @@ PlasmoidItem {
         return "media-playback-stopped-symbolic";
     }
     // With "hide when idle" on, hide entirely only when no media player is
-    // running; otherwise behave normally (passive when stopped, active when
-    // playing) so an open player stays available in the panel.
-    readonly property bool hasActivePlayer: mpris2Model.currentPlayer !== null
+    // running, not counting ignored ones; otherwise behave normally (passive
+    // when stopped, active when playing) so an open player stays available in
+    // the panel.
+    readonly property bool hasActivePlayer: root.player !== null
     readonly property int idleStatus: (plasmoid.configuration.hideWhenIdle && !root.hasActivePlayer)
         ? PlasmaCore.Types.HiddenStatus : PlasmaCore.Types.PassiveStatus
     Plasmoid.status: root.idleStatus
@@ -92,7 +93,7 @@ PlasmoidItem {
 
     onExpandedChanged: {
         if (root.expanded) {
-            mpris2Model.currentPlayer?.updatePosition();
+            root.player?.updatePosition();
         }
     }
 
@@ -171,37 +172,120 @@ PlasmoidItem {
     ]
 
     function previous() {
-        mpris2Model.currentPlayer.Previous();
+        root.player.Previous();
     }
     function next() {
-        mpris2Model.currentPlayer.Next();
+        root.player.Next();
     }
     function play() {
-        mpris2Model.currentPlayer.Play();
+        root.player.Play();
     }
     function pause() {
-        mpris2Model.currentPlayer.Pause();
+        root.player.Pause();
     }
     function togglePlaying() {
         if (root.isPlaying) {
-            mpris2Model.currentPlayer.Pause();
+            root.player.Pause();
         } else {
-            mpris2Model.currentPlayer.Play();
+            root.player.Play();
         }
     }
     function stop() {
-        mpris2Model.currentPlayer.Stop();
+        root.player.Stop();
     }
     function quit() {
-        mpris2Model.currentPlayer.Quit();
+        root.player.Quit();
     }
     function raise() {
-        mpris2Model.currentPlayer.Raise();
+        root.player.Raise();
     }
 
     Mpris.Mpris2Model {
         id: mpris2Model
     }
+
+    // BEGIN ignored players
+    //
+    // Players picked under General > Ignored players are treated as if they
+    // were not running: the widget never shows them, the popup has no tab for
+    // them, and they do not keep a widget that hides when idle visible (#23).
+    // Each entry is a player's desktop entry, or its name if it has none.
+
+    readonly property var ignoredPlayers: (plasmoid.configuration.ignoredPlayers || [])
+        .map(key => key.toLowerCase())
+
+    function isIgnored(desktopEntry, identity) {
+        return root.ignoredPlayers.length > 0
+            && (root.ignoredPlayers.includes((desktopEntry || "").toLowerCase())
+                || root.ignoredPlayers.includes((identity || "").toLowerCase()));
+    }
+
+    // The player the widget shows and controls. Usually the model's own pick,
+    // but when that is an ignored player, the best of the others instead: one
+    // that is playing, then one that is paused, then any. Null when only
+    // ignored players are running.
+    readonly property var player: {
+        const current = mpris2Model.currentPlayer;
+        if (!current || !root.isIgnored(current.desktopEntry, current.identity)) {
+            return current;
+        }
+        let best = null;
+        let bestRank = -1;
+        for (const row of root.playerRowList) {
+            if (row.isMultiplexer || row.ignored || !row.container) {
+                continue;
+            }
+            const status = row.container.playbackStatus;
+            const rank = status === Mpris.PlaybackStatus.Playing ? 2
+                : status === Mpris.PlaybackStatus.Paused ? 1 : 0;
+            if (rank > bestRank) {
+                best = row.container;
+                bestRank = rank;
+            }
+        }
+        return best;
+    }
+
+    // How many players the popup offers a tab for.
+    readonly property int shownPlayerCount: root.playerRowList
+        .filter(row => !row.isMultiplexer && !row.ignored).length
+
+    // The model's rows as objects, to look through the players from a binding.
+    property var playerRowList: []
+    Instantiator {
+        id: playerRows
+        model: mpris2Model
+        delegate: QtObject {
+            required property var container
+            required property bool isMultiplexer
+            required property string desktopEntry
+            required property string identity
+            readonly property bool ignored: root.isIgnored(desktopEntry, identity)
+        }
+        onObjectAdded: root.refreshPlayerRows()
+        onObjectRemoved: root.refreshPlayerRows()
+    }
+    function refreshPlayerRows() {
+        const rows = [];
+        for (let i = 0; i < playerRows.count; ++i) {
+            const row = playerRows.objectAt(i);
+            if (row) {
+                rows.push(row);
+            }
+        }
+        root.playerRowList = rows;
+    }
+
+    // A tab picked in the popup whose player is then ignored would leave the
+    // widget on a player with no tab to switch away from; go back to choosing
+    // automatically instead.
+    readonly property bool pickedPlayerIgnored: mpris2Model.currentIndex > 0
+        && mpris2Model.currentPlayer !== null
+        && root.isIgnored(mpris2Model.currentPlayer.desktopEntry, mpris2Model.currentPlayer.identity)
+    onPickedPlayerIgnoredChanged: if (root.pickedPlayerIgnored) {
+        mpris2Model.currentIndex = 0;
+    }
+    // END ignored players
 
     // BEGIN shared cava
     //
