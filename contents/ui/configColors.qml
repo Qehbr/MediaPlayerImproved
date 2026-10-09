@@ -31,16 +31,21 @@ KCM.SimpleKCM {
     property string cfg_expandedBackgroundSource
     property string cfg_expandedBackgroundColor
 
-    Kirigami.FormLayout {
+    // An information banner, not a row of the form. As a row it carried a
+    // label like every setting below it, "Album art colors:", followed by
+    // grey text where a control would be -- which read as a setting whose
+    // checkbox had failed to render, and was reported as exactly that. There
+    // is no such switch: following the album art is a choice made per element,
+    // in each of the dropdowns below.
+    headerPaddingEnabled: false
+    header: Kirigami.InlineMessage {
+        visible: true
+        type: Kirigami.MessageType.Information
+        position: Kirigami.InlineMessage.Position.Header
+        text: i18n("Album art colors are read from the artwork on screen, so hidden artwork and the system tray fall back to the theme.")
+    }
 
-        QQC2.Label {
-            Kirigami.FormData.label: i18n("Album art colors:")
-            text: i18n("Read from the artwork on screen, so hidden artwork and the system tray fall back to the theme")
-            wrapMode: Text.WordWrap
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 22
-        }
+    Kirigami.FormLayout {
 
         Item {
             Kirigami.FormData.isSection: true
