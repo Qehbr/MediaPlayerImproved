@@ -158,7 +158,7 @@ Loader {
         if (root.track.length === 0) {
             // No player running at all: optionally show nothing instead of an icon.
             // If a player is open but idle, keep the icon so it can be controlled.
-            return (plasmoid.configuration.hideWhenIdle && mpris2Model.currentPlayer === null) ? null : icon;
+            return (plasmoid.configuration.hideWhenIdle && root.player === null) ? null : icon;
         }
         return inTray ? icon : playerRow;
     }
@@ -170,17 +170,17 @@ Loader {
         hoverEnabled: compactRepresentation.item instanceof Kirigami.Icon
         property int wheelDelta: 0
         onWheel: wheel => {
-            if (mpris2Model.currentPlayer === null) {
+            if (root.player === null) {
                 return;
             }
             wheelDelta += (wheel.inverted ? -1 : 1) * (wheel.angleDelta.y ? wheel.angleDelta.y : -wheel.angleDelta.x)
             while (wheelDelta >= 120) {
                 wheelDelta -= 120;
-                mpris2Model.currentPlayer.changeVolume(root.volumePercentStep / 100, true);
+                root.player.changeVolume(root.volumePercentStep / 100, true);
             }
             while (wheelDelta <= -120) {
                 wheelDelta += 120;
-                mpris2Model.currentPlayer.changeVolume(-root.volumePercentStep / 100, true);
+                root.player.changeVolume(-root.volumePercentStep / 100, true);
             }
         }
         onClicked: (mouse) => {
@@ -281,19 +281,19 @@ Loader {
             // Read-only position for the progress bar. MPRIS doesn't push
             // Position updates, so seed from the player and tick locally,
             // resyncing every few seconds to correct any drift.
-            readonly property double trackLength: mpris2Model.currentPlayer?.length ?? 0
-            readonly property double modelPosition: mpris2Model.currentPlayer?.position ?? 0
+            readonly property double trackLength: root.player?.length ?? 0
+            readonly property double modelPosition: root.player?.position ?? 0
             property double displayPosition: 0
             onModelPositionChanged: displayPosition = modelPosition
             onShowProgressChanged: if (showProgress) {
-                mpris2Model.currentPlayer?.updatePosition();
+                root.player?.updatePosition();
             }
 
             Connections {
                 target: root
                 function onTrackChanged() {
                     grid.displayPosition = 0;
-                    mpris2Model.currentPlayer?.updatePosition();
+                    root.player?.updatePosition();
                 }
             }
 
@@ -305,7 +305,7 @@ Loader {
                 onTriggered: {
                     if (++ticks >= 5) {
                         ticks = 0;
-                        mpris2Model.currentPlayer?.updatePosition();
+                        root.player?.updatePosition();
                     } else if (grid.displayPosition < grid.trackLength) {
                         grid.displayPosition += 1000000;
                     }

@@ -24,6 +24,9 @@
     <entry name="hideWhenIdle" type="Bool">
       <default>false</default>
     </entry>
+    <entry name="ignoredPlayers" type="StringList">
+      <default></default>
+    </entry>
     <entry name="noArtworkIcon" type="String">
       <default>applications-multimedia</default>
     </entry>

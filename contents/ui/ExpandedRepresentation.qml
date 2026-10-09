@@ -98,10 +98,10 @@ PlasmaExtras.Representation {
         Kirigami.Theme.highlightColor)
 
     readonly property var appletInterface: root
-    property real rate: mpris2Model.currentPlayer?.rate ?? 1
-    property double length: mpris2Model.currentPlayer?.length ?? 0
-    property double position: mpris2Model.currentPlayer?.position ?? 0
-    property bool canSeek: mpris2Model.currentPlayer?.canSeek ?? false
+    property real rate: root.player?.rate ?? 1
+    property double length: root.player?.length ?? 0
+    property double position: root.player?.position ?? 0
+    property bool canSeek: root.player?.canSeek ?? false
 
     // only show hours (the default for KFormat) when track is actually longer than an hour
     readonly property int durationFormattingOptions: length >= 60*60*1000*1000 ? 0 : KCoreAddons.FormatTypes.FoldHours
@@ -133,6 +133,42 @@ PlasmaExtras.Representation {
             ||  (key === Qt.Key_Left  && Application.layoutDirection === Qt.RightToLeft))
     }
 
+    // Player tabs as the keyboard sees them: ignored players' tabs are still
+    // in the bar, just hidden, so stepping between tabs has to skip them.
+    function playerTabShown(index) {
+        const tab = playerList.itemAt(index);
+        return tab !== null && tab.shown;
+    }
+
+    // The next shown tab from `from` in direction `step` (1 or -1), wrapping
+    // around at either end if `wrap`, otherwise stopping there.
+    function nextPlayerTab(from, step, wrap) {
+        const count = playerList.count;
+        let index = from;
+        for (let i = 0; i < count; ++i) {
+            index += step;
+            if (wrap) {
+                index = (index + count) % count;
+            } else if (index < 0 || index >= count) {
+                return from;
+            }
+            if (playerTabShown(index)) {
+                return index;
+            }
+        }
+        return from;
+    }
+
+    // The index of the n-th shown tab, counting from 0, or -1 if there is none.
+    function playerTabAt(n) {
+        for (let index = 0; index < playerList.count; ++index) {
+            if (playerTabShown(index) && n-- === 0) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
     onPositionChanged: {
         // we don't want to interrupt the user dragging the slider
         if (!seekSlider.pressed && !keyPressed) {
@@ -153,7 +189,7 @@ PlasmaExtras.Representation {
         // to a new track, we'll reset the value to zero and ask for the position again
         seekSlider.value = 0
         seekSlider.to = length
-        mpris2Model.currentPlayer?.updatePosition();
+        root.player?.updatePosition();
         disablePositionUpdate = false
     }
 
@@ -161,18 +197,9 @@ PlasmaExtras.Representation {
         keyPressed = true
         if ((event.key == Qt.Key_Tab || event.key == Qt.Key_Backtab) && event.modifiers & Qt.ControlModifier) {
             event.accepted = true;
-            if (playerList.count > 2) {
-                let nextIndex = mpris2Model.currentIndex + 1;
-                if (event.key == Qt.Key_Backtab || event.modifiers & Qt.ShiftModifier) {
-                    nextIndex -= 2;
-                }
-                if (nextIndex == playerList.count) {
-                    nextIndex = 0;
-                }
-                if (nextIndex < 0) {
-                    nextIndex = playerList.count - 1;
-                }
-                mpris2Model.currentIndex = nextIndex;
+            if (root.shownPlayerCount > 1) {
+                const backwards = event.key == Qt.Key_Backtab || event.modifiers & Qt.ShiftModifier;
+                mpris2Model.currentIndex = expandedRepresentation.nextPlayerTab(mpris2Model.currentIndex, backwards ? -1 : 1, true);
             }
         }
 
@@ -184,8 +211,8 @@ PlasmaExtras.Representation {
         }
 
         if (event.modifiers & Qt.AltModifier && (event.key >= Qt.Key_0 && event.key <= Qt.Key_9)) {
-            let target = event.key == Qt.Key_0 ? 9 : (event.key - Qt.Key_0) -1
-            if (target < playerList.count) {
+            let target = expandedRepresentation.playerTabAt(event.key == Qt.Key_0 ? 9 : (event.key - Qt.Key_0) -1)
+            if (target >= 0) {
                 event.accepted = true
                 mpris2Model.currentIndex = target
             }
@@ -247,7 +274,7 @@ PlasmaExtras.Representation {
             if (expandedRepresentation.position == seekSlider.value) {
                 return;
             }
-            mpris2Model.currentPlayer.position = seekSlider.value;
+            root.player.position = seekSlider.value;
         }
     }
 
@@ -300,7 +327,7 @@ PlasmaExtras.Representation {
                     return;
                 }
                 point1.adjustingVolume = true;
-                mpris2Model.currentPlayer.changeVolume((point1.previousY - point1.y) / touchArea.height, false);
+                root.player.changeVolume((point1.previousY - point1.y) / touchArea.height, false);
             }
         }
 
@@ -630,7 +657,7 @@ PlasmaExtras.Representation {
                             if (!seekSlider.pressed) {
                                 disablePositionUpdate = true
                                 if (seekSlider.value == seekSlider.to) {
-                                    mpris2Model.currentPlayer.updatePosition();
+                                    root.player.updatePosition();
                                 } else {
                                     seekSlider.value += 1000000
                                 }
@@ -744,7 +771,7 @@ PlasmaExtras.Representation {
                                 "action.checked": root.playbackRate === speed
                             });
                             menuItem.action.triggered.connect(() => {
-                                mpris2Model.currentPlayer.rate = speed;
+                                root.player.rate = speed;
                             });
                             menu.addMenuItem(menuItem);
                         });
@@ -807,7 +834,7 @@ PlasmaExtras.Representation {
                     KeyNavigation.up: playPauseButton.KeyNavigation.up
 
                     onClicked: {
-                        mpris2Model.currentPlayer.shuffle =
+                        root.player.shuffle =
                             root.shuffle === Mpris.ShuffleStatus.On ? Mpris.ShuffleStatus.Off : Mpris.ShuffleStatus.On;
                     }
 
@@ -905,7 +932,7 @@ PlasmaExtras.Representation {
                         default:
                             status = Mpris.LoopStatus.Playlist;
                         }
-                        mpris2Model.currentPlayer.loopStatus = status;
+                        root.player.loopStatus = status;
                     }
 
                     PlasmaComponents3.ToolTip {
@@ -935,7 +962,7 @@ PlasmaExtras.Representation {
     header: PlasmaExtras.PlasmoidHeading {
         id: headerItem
         position: PlasmaComponents3.ToolBar.Header
-        visible: playerList.count > 2
+        visible: root.shownPlayerCount > 1
         //this removes top padding to allow tabbar to touch the edge
         topPadding: topInset
         bottomPadding: -bottomInset
@@ -964,11 +991,8 @@ PlasmaExtras.Representation {
 
             // immediately update content on arrow key press the way other plasmoids do (e.g. weather, volume)
             function handleArrows(event) {
-                if (expandedRepresentation.isForwardArrowKey(event.key)) {
-                    mpris2Model.currentIndex = Math.min(currentIndex+1, count-1)
-                } else {
-                    mpris2Model.currentIndex = Math.max(currentIndex-1, 0)
-                }
+                const step = expandedRepresentation.isForwardArrowKey(event.key) ? 1 : -1;
+                mpris2Model.currentIndex = expandedRepresentation.nextPlayerTab(currentIndex, step, false);
             }
 
             Repeater {
@@ -980,6 +1004,13 @@ PlasmaExtras.Representation {
                     required property bool isMultiplexer
                     required property string identity
                     required property int index
+                    // An ignored player keeps its tab, hidden and with no
+                    // width, so that each tab's index still matches its row
+                    // in the player model. The automatic tab follows whichever
+                    // player the model picked, so it is never hidden.
+                    readonly property bool shown: isMultiplexer || !root.isIgnored(desktopEntry, identity)
+                    visible: shown
+                    width: shown ? undefined : 0
                     anchors.top: parent?.top
                     anchors.bottom: parent?.bottom
                     implicitWidth: 1 // HACK: suppress binding loop warnings
