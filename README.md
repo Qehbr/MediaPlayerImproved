@@ -8,13 +8,9 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 
 ## Features
 
-### Expanded Representation
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Popup background | Blurred album art | Blurred album art, a flat color from the album art, the theme default, or a custom color |
-
 ### Audio Visualizer
 - Animated frequency bars, with an optional **real audio-reactive** mode powered by [`cava`](https://github.com/karlstav/cava) (falls back to a simple animation if cava isn't installed)
+  — a single cava per widget, shared by the panel and the popup
 - Visible in both the compact (panel) and expanded (popup) views
 - Four position options in compact mode: **Bottom**, **Left**, **Right**, or **Behind** text
 - Configurable bar count (5–50) and height (10–100 px)

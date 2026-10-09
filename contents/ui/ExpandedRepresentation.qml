@@ -917,7 +917,6 @@ PlasmaExtras.Representation {
             // Audio Visualizer in Expanded View
             AudioVisualizer {
                 id: expandedVisualizer
-                role: "expanded"
                 artColor: albumArt.artAccentColor
                 Layout.fillWidth: true
                 Layout.preferredHeight: plasmoid.configuration.visualizerHeight || 30

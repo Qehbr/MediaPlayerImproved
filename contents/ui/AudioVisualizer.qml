@@ -7,7 +7,6 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
-import org.kde.plasma.plasma5support as Plasma5Support
 
 import "../code/colorsource.js" as ColorSource
 
@@ -22,7 +21,8 @@ Item {
         var maxBars = Math.floor(width / (minBarWidth + minSpacing))
         return Math.min(maxBarCount, Math.max(5, maxBars))
     }
-    // cava requires an even number of bars for stereo input, so always use one.
+    // Kept even so cava's stereo output, the left channel's bars then the
+    // right's, still splits down the middle once averaged down.
     readonly property int barCount: Math.max(4, rawBarCount - (rawBarCount % 2))
 
     property bool isPlaying: root.isPlaying
@@ -38,125 +38,45 @@ Item {
 
     implicitHeight: plasmoid.configuration.visualizerHeight || 30
 
-    // Per-bar heights (0..1), filled by real audio (cava) or, as a fallback,
-    // by a simple simulated animation.
-    property var levels: []
-
     // Only do work while actually playing and on screen.
     readonly property bool active: visualizer.isPlaying && visualizer.visible
 
-    // Opt-in real audio via cava. Falls back to the simulation whenever no
-    // fresh data is arriving (cava missing, disabled, paused, or starting up).
+    // Real audio comes from the widget's one shared cava (see main.qml). This
+    // visualizer only reads it, and falls back to the animation whenever no
+    // fresh frames are arriving: cava missing, disabled, paused or starting up.
     readonly property bool useRealAudio: plasmoid.configuration.visualizerUseRealAudio === true
-    readonly property string cavaSource: plasmoid.configuration.visualizerCavaSource || ""
-    readonly property bool wantCava: useRealAudio && active
-    property double lastRealMs: 0
-    readonly property bool realActive: useRealAudio && (Date.now() - lastRealMs < 600)
+    readonly property bool realActive: visualizer.useRealAudio && root.cavaLive
 
-    readonly property string helperPath: Qt.resolvedUrl("../code/cava.sh").toString().replace("file://", "")
-    property string cavaTag: ""
-    property string cavaOut: ""
+    // Only a visualizer that is being drawn reads the shared frames, so the
+    // compact view's hidden alternatives cost nothing at 25 frames a second.
+    readonly property var realLevels: (visualizer.active && visualizer.realActive)
+        ? visualizer.fitLevels(root.cavaLevels, visualizer.barCount) : []
+    property var simulatedLevels: []
 
-    // Names this visualizer rather than one start of it. Several visualizers run
-    // at once (the panel's and the popup's), so the helper needs to tell its own
-    // predecessor apart from a sibling. It has to stay the same across component
-    // teardown too: the compact representation is destroyed and rebuilt whenever
-    // the track title goes briefly empty between songs, and a fresh id there
-    // would strand the instance the destroyed component left behind.
-    required property string role
-    readonly property string vizId: (plasmoid.id !== undefined ? plasmoid.id : 0) + "x" + role
+    // Per-bar heights, 0 to 1.
+    readonly property var levels: visualizer.realActive ? visualizer.realLevels : visualizer.simulatedLevels
 
-    // Long-running cava control (start) and one-shot stop (pkill). cava is
-    // started via the executable engine, but the engine doesn't reliably kill
-    // child processes, so we stop it explicitly with pkill on a unique tag.
-    Plasma5Support.DataSource {
-        id: cavaCtl
-        engine: "executable"
-        connectedSources: []
-        onNewData: (source, data) => cavaCtl.disconnectSource(source)
-    }
-
-    // Reads the latest frame from cava's output file. (XMLHttpRequest can't read
-    // local files in Plasma, so we cat it through the executable engine.)
-    Plasma5Support.DataSource {
-        id: reader
-        engine: "executable"
-        connectedSources: []
-        onNewData: (source, data) => {
-            reader.disconnectSource(source);
-            const txt = data.stdout;
-            if (!txt) {
-                return;
-            }
-            const parts = txt.split(";");
-            let arr = [];
-            for (let i = 0; i < parts.length; ++i) {
-                if (parts[i] === "") {
-                    continue;
-                }
-                const v = parseInt(parts[i], 10);
-                if (!isNaN(v)) {
-                    arr.push(Math.max(0.03, Math.min(1, v / 100)));
-                }
-            }
-            if (arr.length > 0) {
-                visualizer.levels = arr;
-                visualizer.lastRealMs = Date.now();
-            }
+    // Fits the shared frame to this visualizer's bar count by averaging
+    // neighbouring bars, or repeating them in the unlikely case it has more.
+    function fitLevels(source, count) {
+        const n = source.length;
+        if (n === 0 || count <= 0) {
+            return [];
         }
-    }
-
-    function stopCava() {
-        restartTimer.stop();
-        if (cavaTag !== "") {
-            cavaCtl.connectSource("pkill -f mpi-cava-" + cavaTag);
-            cavaTag = "";
-            cavaOut = "";
+        if (n === count) {
+            return source;
         }
-    }
-
-    // Coalesce restarts. barCount follows the widget's width, so one panel
-    // resize emits a burst of changes, and restarting on each of them dispatched
-    // a stop for a tag whose start had not spawned yet -- the stop matched
-    // nothing and the instance was orphaned under a tag the widget had already
-    // thrown away. Waiting for the burst to settle removes that race rather than
-    // cleaning up after it (#11).
-    Timer {
-        id: restartTimer
-        interval: 300
-        onTriggered: visualizer.doStartCava()
-    }
-
-    function startCava() {
-        restartTimer.restart();
-    }
-
-    function doStartCava() {
-        stopCava();
-        // Zero-padded to a fixed width: equal-length tags can never be a
-        // substring of one another, so the stop pkill and the helper's temp
-        // file sweep can't confuse two concurrent instances (the panel and the
-        // popup each run their own).
-        cavaTag = "mpi" + ("00000000" + Math.floor(Math.random() * 1e9)).slice(-9);
-        cavaOut = "/tmp/mpi-cava-" + cavaTag + ".dat";
-        cavaCtl.connectSource("sh \"" + helperPath + "\" " + barCount + " " + cavaTag
-            + " \"" + cavaSource + "\" " + vizId);
-    }
-
-    onWantCavaChanged: wantCava ? startCava() : stopCava()
-    onBarCountChanged: if (wantCava) { startCava(); }
-    onCavaSourceChanged: if (wantCava) { startCava(); }
-    Component.onCompleted: if (wantCava) { startCava(); }
-    Component.onDestruction: stopCava()
-
-    // Poll cava's latest frame.
-    Timer {
-        interval: 40 // ~25 fps
-        repeat: true
-        running: visualizer.wantCava
-        onTriggered: if (visualizer.cavaOut !== "") {
-            reader.connectSource("cat \"" + visualizer.cavaOut + "\"");
+        let fitted = [];
+        for (let i = 0; i < count; ++i) {
+            const from = Math.floor(i * n / count);
+            const to = Math.max(from + 1, Math.floor((i + 1) * n / count));
+            let sum = 0;
+            for (let j = from; j < to; ++j) {
+                sum += source[j];
+            }
+            fitted.push(sum / (to - from));
         }
+        return fitted;
     }
 
     // Simulated animation — used when real audio isn't active.
@@ -174,7 +94,7 @@ Item {
                 const frequencyFactor = 1.0 - (i / visualizer.barCount) * 0.3;
                 arr.push(Math.max(0.1, Math.min(1.0, (base + variation + randomFactor) * frequencyFactor)));
             }
-            visualizer.levels = arr;
+            visualizer.simulatedLevels = arr;
         }
     }
 

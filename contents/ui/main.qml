@@ -11,6 +11,7 @@ import QtQuick
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.private.mpris as Mpris
+import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.kirigami as Kirigami
 
 PlasmoidItem {
@@ -201,4 +202,153 @@ PlasmoidItem {
     Mpris.Mpris2Model {
         id: mpris2Model
     }
+
+    // BEGIN shared cava
+    //
+    // One cava for the whole widget, read by every visualizer in it. Each
+    // visualizer used to run its own, and fitted as many bars as its width
+    // allowed -- the panel and the popup wanted different counts, and cava's
+    // bar count is fixed per process, so they could not share. Now cava runs at
+    // the configured bar count, the most any visualizer will show, and each one
+    // averages that down to what fits. Opening the popup no longer starts a
+    // second cava that takes a moment to get going, and resizing the panel no
+    // longer restarts anything.
+    //
+    // It belongs to the widget rather than to the visualizers, so a visualizer
+    // being torn down and rebuilt -- every song change in a browser, whose title
+    // goes briefly empty and rebuilds the compact view -- never touches it.
+
+    readonly property bool cavaRealAudio: plasmoid.configuration.visualizerUseRealAudio === true
+    readonly property string cavaSource: plasmoid.configuration.visualizerCavaSource || ""
+    // cava needs an even number of bars for stereo input.
+    readonly property int cavaBars: {
+        const wanted = plasmoid.configuration.visualizerBars || 20;
+        return Math.max(4, wanted - (wanted % 2));
+    }
+    // Some visualizer is actually being drawn: the panel's whenever it is
+    // enabled, the popup's only while the popup is open.
+    readonly property bool cavaWanted: root.cavaRealAudio
+        && root.isPlaying
+        && plasmoid.configuration.enableVisualizer !== false
+        && (plasmoid.configuration.visualizerInCompact !== false
+            || (plasmoid.configuration.visualizerInExpanded !== false && root.expanded))
+
+    // The latest frame, cavaBars levels from 0 to 1, and whether frames are
+    // still arriving. Visualizers fall back to their animation when they stop.
+    property var cavaLevels: []
+    property bool cavaLive: false
+
+    property string cavaTag: ""
+    property string cavaOut: ""
+    readonly property string cavaHelper: Qt.resolvedUrl("../code/cava.sh").toString().replace("file://", "")
+    // Names this widget to the helper, so a start can clean up its own
+    // predecessor without touching another instance of the widget.
+    readonly property string cavaVizId: (plasmoid.id !== undefined ? plasmoid.id : 0) + "xshared"
+
+    function cavaStart() {
+        root.cavaStop();
+        // Zero-padded to a fixed width: equal-length tags can never be a
+        // substring of one another, so the stop pkill cannot confuse two.
+        root.cavaTag = "mpi" + ("00000000" + Math.floor(Math.random() * 1e9)).slice(-9);
+        root.cavaOut = "/tmp/mpi-cava-" + root.cavaTag + ".dat";
+        cavaCtl.connectSource("sh \"" + root.cavaHelper + "\" " + root.cavaBars + " " + root.cavaTag
+            + " \"" + root.cavaSource + "\" " + root.cavaVizId);
+    }
+
+    function cavaStop() {
+        cavaStopTimer.stop();
+        if (root.cavaTag !== "") {
+            cavaCtl.connectSource("pkill -f mpi-cava-" + root.cavaTag);
+            root.cavaTag = "";
+            root.cavaOut = "";
+        }
+        root.cavaLive = false;
+    }
+
+    // Start straight away, but stop only once nothing has wanted cava for a
+    // moment, the same allowance this file already gives players that take a
+    // while to load the next track. A brief pause between songs then never
+    // restarts it.
+    onCavaWantedChanged: {
+        if (root.cavaWanted) {
+            cavaStopTimer.stop();
+            if (root.cavaTag === "") {
+                root.cavaStart();
+            }
+        } else {
+            cavaStopTimer.restart();
+        }
+    }
+    onCavaBarsChanged: if (root.cavaTag !== "") root.cavaStart()
+    onCavaSourceChanged: if (root.cavaTag !== "") root.cavaStart()
+    Component.onCompleted: if (root.cavaWanted) root.cavaStart()
+    Component.onDestruction: root.cavaStop()
+
+    Timer {
+        id: cavaStopTimer
+        interval: Kirigami.Units.humanMoment
+        onTriggered: if (!root.cavaWanted) root.cavaStop()
+    }
+
+    // Long-running start and one-shot stop. The executable engine does not
+    // reliably kill child processes, so stopping is an explicit pkill on the tag.
+    Plasma5Support.DataSource {
+        id: cavaCtl
+        engine: "executable"
+        connectedSources: []
+        onNewData: (source, data) => cavaCtl.disconnectSource(source)
+    }
+
+    // Reads the latest frame. XMLHttpRequest cannot read local files in Plasma,
+    // so it is cat'd through the executable engine; once for the whole widget
+    // now, rather than once per visualizer.
+    Plasma5Support.DataSource {
+        id: cavaReader
+        engine: "executable"
+        connectedSources: []
+        onNewData: (source, data) => {
+            cavaReader.disconnectSource(source);
+            const txt = data.stdout;
+            if (!txt) {
+                return;
+            }
+            const parts = txt.split(";");
+            let levels = [];
+            for (let i = 0; i < parts.length; ++i) {
+                if (parts[i] === "") {
+                    continue;
+                }
+                const v = parseInt(parts[i], 10);
+                if (!isNaN(v)) {
+                    levels.push(Math.max(0.03, Math.min(1, v / 100)));
+                }
+            }
+            if (levels.length > 0) {
+                root.cavaLevels = levels;
+                root.cavaLive = true;
+                cavaStaleTimer.restart();
+            }
+        }
+    }
+
+    Timer {
+        interval: 40 // ~25 fps
+        repeat: true
+        running: root.cavaTag !== ""
+        onTriggered: if (root.cavaOut !== "") {
+            cavaReader.connectSource("cat \"" + root.cavaOut + "\"");
+        }
+    }
+
+    // Frames stopped arriving -- cava missing, failed or restarting. A timer
+    // rather than comparing against the clock in a binding: a binding is only
+    // re-evaluated when something it reads changes, and the clock is not one of
+    // those things, so the old check never noticed and left the bars frozen on
+    // the last frame instead of falling back to the animation.
+    Timer {
+        id: cavaStaleTimer
+        interval: 600
+        onTriggered: root.cavaLive = false
+    }
+    // END shared cava
 }
