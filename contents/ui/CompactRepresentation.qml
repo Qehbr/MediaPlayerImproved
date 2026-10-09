@@ -500,7 +500,6 @@ Loader {
             // Visualizer on left
             AudioVisualizer {
                 id: leftVisualizer
-                role: "compactleft"
                 artColor: albumArt.artAccentColor
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
@@ -547,7 +546,6 @@ Loader {
                 // Behind visualizer (rendered first, so it appears behind)
                 AudioVisualizer {
                     id: behindVisualizer
-                    role: "compactbehind"
                     artColor: albumArt.artAccentColor
                     anchors.fill: parent
                     visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
@@ -629,7 +627,6 @@ Loader {
                     // Audio Visualizer at bottom
                     AudioVisualizer {
                         id: bottomVisualizer
-                        role: "compactbottom"
                         artColor: albumArt.artAccentColor
                         Layout.fillWidth: true
                         // Never taller than the room left over, so the bars
@@ -656,7 +653,6 @@ Loader {
             // Visualizer on right
             AudioVisualizer {
                 id: rightVisualizer
-                role: "compactright"
                 artColor: albumArt.artAccentColor
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true

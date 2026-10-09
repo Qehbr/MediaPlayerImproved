@@ -4,13 +4,15 @@
 # cava captures the system audio output, so the bars react to what is playing.
 #
 # Usage: cava.sh <bars> <tag> <source> <vizid>
-#   All temp files live at /tmp/mpi-cava-<tag>.{conf,fifo,dat}. The tag is unique
-#   per start and appears in this process's and cava's command line, so the
-#   widget can stop this instance with `pkill -f mpi-cava-<tag>` (the executable
-#   data engine does not reliably kill child processes on its own).
-#   <vizid> identifies the visualizer rather than the start, and is stable for as
-#   long as the widget lives. It is what lets a start clean up its own
-#   predecessor without touching a different visualizer.
+#   Temp files live at /tmp/mpi-cava-<tag>.{fifo,dat} and
+#   /tmp/mpi-cava-<tag>-vid-<vizid>.conf. The tag is unique per start and appears
+#   in this process's and cava's command line, so the widget can stop this
+#   instance with `pkill -f mpi-cava-<tag>` (the executable data engine does not
+#   reliably kill child processes on its own).
+#   <vizid> identifies the widget rather than the start, and is stable for as
+#   long as the widget lives; the widget runs one cava shared by all of its
+#   visualizers. It is what lets a start clean up its own predecessor without
+#   touching another instance of the widget.
 #   <source> is an optional PulseAudio/PipeWire source name; empty means cava's
 #   default (the system output monitor).
 
@@ -31,10 +33,19 @@ if [ "$5" != "$MARKER" ]; then
     exec sh "$0" "$BARS" "$TAG" "$SOURCE" "$VIZID" "$MARKER"
 fi
 
-# Terminate an earlier instance of *this* visualizer. Matching on the visualizer
+# True when <pid> is still the process we mean, judged by a marker on its
+# command line rather than by the pid alone, which the kernel reuses.
+still_ours() {
+    case "$( { tr '\0' ' ' < "/proc/$1/cmdline"; } 2>/dev/null )" in
+        *"$2"*) return 0 ;;
+    esac
+    return 1
+}
+
+# Terminate an earlier instance started by *this* widget. Matching on the widget
 # id rather than on a bare mpi-cava- token means this can only ever reach our own
-# predecessor: another visualizer -- the panel and the popup each run one at the
-# same time -- carries a different id and is left alone.
+# predecessor: another instance of the widget, on another panel or the desktop,
+# carries a different id and is left alone.
 #
 # This is the backstop for a start whose stop arrived too early. The widget
 # dispatches the stop for the previous tag and the start for the new one as
@@ -43,10 +54,16 @@ fi
 # the widget has already discarded. That is what piled cava processes up (#11).
 # SIGTERM, not SIGKILL, so the predecessor's own trap tears down its cava and
 # removes its temp files.
+#
+# It reaches a predecessor's cava as well as its wrapper, because cava carries
+# the widget id too, in its config path. That matters when the wrapper is
+# already gone: killed outright, its trap never ran, and its cava, which does
+# not exit merely because nobody reads its output, would otherwise be left
+# running with nothing on its command line to find it by (#24).
 if [ -n "$VIZID" ]; then
     for _pid in $(pgrep -f "vid-$VIZID" 2>/dev/null); do
         [ "$_pid" = "$$" ] && continue
-        _cmd=$(tr '\0' ' ' < "/proc/$_pid/cmdline" 2>/dev/null) || continue
+        _cmd=$( { tr '\0' ' ' < "/proc/$_pid/cmdline"; } 2>/dev/null ) || continue
         case "$_cmd" in
             *"mpi-cava-$TAG"*) continue ;;
         esac
@@ -56,8 +73,7 @@ fi
 
 # Drop temp files belonging to instances that are no longer running. This only
 # ever removes files, never signals a process, so it cannot disturb a live
-# instance: the panel and the popup each run their own visualizer, with their
-# own tags, at the same time.
+# instance, such as another instance of the widget's.
 for _f in /tmp/mpi-cava-*; do
     [ -e "$_f" ] || continue
     _t=${_f#/tmp/mpi-cava-}
@@ -66,7 +82,13 @@ for _f in /tmp/mpi-cava-*; do
     pgrep -f "mpi-cava-$_t" >/dev/null 2>&1 || rm -f "$_f"
 done
 
-CFG="/tmp/mpi-cava-$TAG.conf"
+# cava's config path is the only thing on cava's own command line, so the
+# visualizer id goes into it; see the reaper above for why that matters.
+if [ -n "$VIZID" ]; then
+    CFG="/tmp/mpi-cava-$TAG-vid-$VIZID.conf"
+else
+    CFG="/tmp/mpi-cava-$TAG.conf"
+fi
 FIFO="/tmp/mpi-cava-$TAG.fifo"
 OUT="/tmp/mpi-cava-$TAG.dat"
 
@@ -127,8 +149,16 @@ if [ -n "$ORIG_PPID" ]; then
     {
         while :; do
             sleep 5
+            # The wrapper gone without its trap having run means it was killed
+            # outright, and nothing else is left to stop cava. Do it here rather
+            # than simply leaving, which is what used to strand it.
+            if ! still_ours "$MAIN_PID" "$MARKER"; then
+                still_ours "$CAVA_PID" "mpi-cava-$TAG" && kill -TERM "$CAVA_PID" 2>/dev/null
+                still_ours "$READER_PID" "$MARKER" && kill -TERM "$READER_PID" 2>/dev/null
+                rm -f "$CFG" "$FIFO" "$OUT" "$OUT.tmp"
+                exit 0
+            fi
             _now=$(sed -n 's/^PPid:[[:space:]]*//p' "/proc/$MAIN_PID/status" 2>/dev/null)
-            [ -z "$_now" ] && exit 0
             if [ "$_now" != "$ORIG_PPID" ]; then
                 kill -TERM "$MAIN_PID" 2>/dev/null
                 exit 0
