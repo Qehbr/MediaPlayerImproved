@@ -28,7 +28,12 @@ Loader {
         switch (compactRepresentation.layoutForm) {
         case CompactRepresentation.LayoutType.HorizontalPanel:
         case CompactRepresentation.LayoutType.HorizontalDesktop:
-            return implicitWidth;
+            // Never below the configured minimum. The panel sizes a widget
+            // that does not stretch by its preferred width and does not hold
+            // it to its minimum width, so a minimum carried only in
+            // Layout.minimumWidth reached the panel and was then ignored: a
+            // short title still shrank the widget, bars and all (#22).
+            return Math.max(implicitWidth, compactRepresentation.Layout.minimumWidth);
         default:
             return -1;
         }
