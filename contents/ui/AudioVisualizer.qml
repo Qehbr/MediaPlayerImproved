@@ -135,9 +135,13 @@ Item {
         }
     }
 
+    // How see-through the bars are, as set by whoever places them. Kept apart
+    // from opacity, which an outside setting would replace outright, taking
+    // the fade below with it.
+    property real barOpacity: 1.0
+
     // Fade out when not playing
-    // Note: When used in "behind" mode, parent sets a custom opacity which multiplies with this
-    opacity: visualizer.isPlaying ? 1.0 : 0.3
+    opacity: (visualizer.isPlaying ? 1.0 : 0.3) * visualizer.barOpacity
 
     Behavior on opacity {
         NumberAnimation {

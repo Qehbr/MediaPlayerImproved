@@ -19,7 +19,10 @@ KCM.SimpleKCM {
     property string cfg_visualizerCavaSource
     property alias cfg_visualizerInCompact: visualizerInCompact.checked
     property string cfg_visualizerPositionCompact
-    property alias cfg_visualizerBehindOpacity: visualizerBehindOpacity.value
+    property real cfg_visualizerBehindOpacity
+    property real cfg_visualizerCompactOpacity
+    property alias cfg_visualizerCompactHeight: visualizerCompactHeight.value
+    property string cfg_visualizerCavaChannels
     property alias cfg_visualizerInExpanded: visualizerInExpanded.checked
     property alias cfg_visualizerHeight: visualizerHeight.value
     property alias cfg_visualizerBars: visualizerBars.value
@@ -77,6 +80,18 @@ KCM.SimpleKCM {
             onActivated: configVisualizer.cfg_visualizerCavaSource = sourceModel[currentIndex].value
         }
 
+        QQC2.ComboBox {
+            Kirigami.FormData.label: i18n("cava channels:")
+            enabled: enableVisualizer.checked && visualizerUseRealAudio.checked
+            model: [
+                { text: i18n("Stereo (bass in the middle)"), value: "stereo" },
+                { text: i18n("Mono (bass on the left)"), value: "mono" }
+            ]
+            textRole: "text"
+            currentIndex: configVisualizer.cfg_visualizerCavaChannels === "mono" ? 1 : 0
+            onActivated: configVisualizer.cfg_visualizerCavaChannels = model[currentIndex].value
+        }
+
         Item {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Placement")
@@ -109,19 +124,45 @@ KCM.SimpleKCM {
             }
         }
 
+        QQC2.SpinBox {
+            id: visualizerCompactHeight
+            Kirigami.FormData.label: i18n("Compact height:")
+            enabled: enableVisualizer.checked && visualizerInCompact.checked
+                && (configVisualizer.cfg_visualizerPositionCompact === "bottom" || configVisualizer.cfg_visualizerPositionCompact === "behind")
+            from: 0
+            to: 200
+            stepSize: 2
+            textFromValue: (value, locale) => value === 0 ? i18n("Automatic") : i18n("%1 px", value)
+            valueFromText: (text, locale) => parseInt(text) || 0
+            QQC2.ToolTip.text: i18n("At the bottom, bars taller than the room under the text rise behind it. Behind the text, how far up the bars reach.")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+
         QQC2.Slider {
-            id: visualizerBehindOpacity
-            Kirigami.FormData.label: i18n("Behind opacity:")
-            enabled: enableVisualizer.checked && visualizerInCompact.checked && configVisualizer.cfg_visualizerPositionCompact === "behind"
+            id: visualizerOpacity
+            // Behind the text keeps a setting of its own, lower by default so
+            // the text over it stays readable.
+            readonly property bool behind: configVisualizer.cfg_visualizerPositionCompact === "behind"
+            Kirigami.FormData.label: i18n("Compact opacity:")
+            enabled: enableVisualizer.checked && visualizerInCompact.checked
             from: 0.1
             to: 1.0
             stepSize: 0.05
             live: true
+            value: behind ? configVisualizer.cfg_visualizerBehindOpacity : configVisualizer.cfg_visualizerCompactOpacity
+            onMoved: {
+                if (behind) {
+                    configVisualizer.cfg_visualizerBehindOpacity = value;
+                } else {
+                    configVisualizer.cfg_visualizerCompactOpacity = value;
+                }
+            }
 
             QQC2.ToolTip {
-                parent: visualizerBehindOpacity.handle
-                visible: visualizerBehindOpacity.pressed
-                text: (visualizerBehindOpacity.value * 100).toFixed(0) + "%"
+                parent: visualizerOpacity.handle
+                visible: visualizerOpacity.pressed
+                text: (visualizerOpacity.value * 100).toFixed(0) + "%"
             }
         }
 

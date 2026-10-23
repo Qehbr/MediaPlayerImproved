@@ -16,6 +16,8 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - Configurable bar count (5–50) and height (10–100 px)
 - Bar color from the theme, the album art, or a color picker
 - "Behind" mode renders bars beneath the text with adjustable opacity for a subtle depth effect
+- The panel's bars have their own height and opacity: at the bottom they can rise behind the text instead of squeezing under it
+- Real audio in stereo (mirrored, bass in the middle) or mono (bass to treble, left to right)
 - Bars fade when paused and animate smoothly when playing
 
 ### Scrolling Text
@@ -36,7 +38,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 
 ### Expanded View (Popup)
 - Full album art with blurred background
-- Track title, artist, and album
+- Track title, artist, and album, beside the artwork or below it at full width
 - Seek slider with elapsed/remaining time
 - Playback rate selector (0.25×–2.0×)
 - Shuffle and repeat controls
@@ -123,6 +125,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Volume step | 5% | How much each scroll tick changes volume (1–20%) |
 | Hide when idle | Disabled | Hide the widget entirely when nothing is playing |
 | Ignored players | None | Players left out as if they weren't running: not shown, no popup tab, and they don't keep a hidden-when-idle widget visible. Pick from the players currently running |
+| Track info in popup | Beside the artwork | Title, artist and album beside the artwork, or below it, where long titles get the popup's full width |
 | No-artwork icon | `applications-multimedia` | Icon shown when a track has no album art |
 
 ### Compact View
@@ -151,9 +154,11 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Enable visualizer | Enabled | Master on/off toggle |
 | React to real audio | Disabled | Use `cava` for real frequency analysis (requires cava); falls back to the animation otherwise |
 | cava source | Automatic | Audio source the bars react to — pick from detected devices, or the default output |
+| cava channels | Stereo | Stereo mirrors the channels with the bass in the middle; mono runs bass to treble from left to right |
 | Show in compact view | Enabled | Visualizer in the panel widget |
 | Position (compact) | Bottom | Bottom / Left / Right / Behind |
-| Behind opacity | 0.3 | Opacity when using "Behind" position (0.1–1.0) |
+| Compact height | Automatic | Height of the bars at the bottom or behind the text. At the bottom, bars taller than the room under the text rise behind it; behind the text, how far up they reach |
+| Compact opacity | 100% (30% behind text) | Opacity of the panel's bars (10–100%). Behind the text keeps a value of its own |
 | Show in expanded view | Enabled | Visualizer in the popup |
 | Height | 30 px | Bar height in pixels (10–100) |
 | Number of bars | 20 | Bar count (5–50) |

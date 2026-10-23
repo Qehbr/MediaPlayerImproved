@@ -62,6 +62,19 @@ Item {
     readonly property color artContrastColor: artColors.dominantContrast
 
     /**
+     * Reads the artwork's colours again.
+     *
+     * ImageColors looks at the artwork only while its window is on screen;
+     * otherwise it keeps the colours it read last. A popup swaps its artwork
+     * in as it opens, so its read can come before it is up and leave it with
+     * the previous track's colours. Reading again once the artwork has
+     * settled puts that right.
+     */
+    function refreshColors() {
+        artColors.update();
+    }
+
+    /**
      * Whether the component is used in the compact representation
      */
     property bool inCompactRepresentation: false
@@ -157,6 +170,11 @@ Item {
         anchors.fill: parent
 
         readonly property string icon: root.iconName || plasmoid.configuration.noArtworkIcon || "applications-multimedia"
+
+        // New artwork has fully faded in.
+        onBusyChanged: if (!busy) {
+            container.refreshColors();
+        }
 
         replaceEnter: Transition {
             OpacityAnimator {

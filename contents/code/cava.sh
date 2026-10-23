@@ -3,7 +3,7 @@
 # per write (semicolon-separated integers 0-100). The widget polls that file.
 # cava captures the system audio output, so the bars react to what is playing.
 #
-# Usage: cava.sh <bars> <tag> <source> <vizid>
+# Usage: cava.sh <bars> <tag> <source> <vizid> [channels]
 #   Temp files live at /tmp/mpi-cava-<tag>.{fifo,dat} and
 #   /tmp/mpi-cava-<tag>-vid-<vizid>.conf. The tag is unique per start and appears
 #   in this process's and cava's command line, so the widget can stop this
@@ -15,11 +15,16 @@
 #   touching another instance of the widget.
 #   <source> is an optional PulseAudio/PipeWire source name; empty means cava's
 #   default (the system output monitor).
+#   [channels] is "mono" to fold both channels into one row of bars, bass to
+#   treble from left to right; anything else keeps cava's stereo default, the
+#   two channels mirrored with the bass in the middle.
 
 BARS="${1:-20}"
 TAG="$2"
 SOURCE="$3"
 VIZID="$4"
+CHANNELS="$5"
+[ "$CHANNELS" = "mono" ] || CHANNELS="stereo"
 [ -z "$TAG" ] && exit 1
 command -v cava >/dev/null 2>&1 || exit 127
 
@@ -29,8 +34,8 @@ command -v cava >/dev/null 2>&1 || exit 127
 # has already forgotten about. Since the EXIT trap below kills our cava, making
 # this process match the pattern is what actually makes a stop reliable.
 MARKER="mpi-cava-$TAG-vid-$VIZID"
-if [ "$5" != "$MARKER" ]; then
-    exec sh "$0" "$BARS" "$TAG" "$SOURCE" "$VIZID" "$MARKER"
+if [ "$6" != "$MARKER" ]; then
+    exec sh "$0" "$BARS" "$TAG" "$SOURCE" "$VIZID" "$CHANNELS" "$MARKER"
 fi
 
 # True when <pid> is still the process we mean, judged by a marker on its
@@ -114,6 +119,10 @@ mkfifo "$FIFO" 2>/dev/null || exit 1
         echo "source = $SOURCE"
     fi
     echo "[output]"
+    if [ "$CHANNELS" = "mono" ]; then
+        echo "channels = mono"
+        echo "mono_option = average"
+    fi
     echo "method = raw"
     echo "raw_target = $FIFO"
     echo "data_format = ascii"
