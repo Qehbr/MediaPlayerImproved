@@ -144,6 +144,11 @@
     <entry name="visualizerCavaSource" type="String">
       <default></default>
     </entry>
+    <!-- stereo | mono. Stereo mirrors the two channels with the bass in the
+         middle; mono folds them into one, bass to treble from left to right. -->
+    <entry name="visualizerCavaChannels" type="String">
+      <default>stereo</default>
+    </entry>
     <entry name="visualizerInCompact" type="Bool">
       <default>true</default>
     </entry>
@@ -172,6 +177,20 @@
     </entry>
     <entry name="visualizerBehindOpacity" type="Double">
       <default>0.3</default>
+      <min>0.1</min>
+      <max>1.0</max>
+    </entry>
+    <!-- Height of the compact view's bars below or behind the text, in pixels;
+         0 for automatic. -->
+    <entry name="visualizerCompactHeight" type="Int">
+      <default>0</default>
+      <min>0</min>
+      <max>200</max>
+    </entry>
+    <!-- Opacity of the compact view's bars in every position but behind the
+         text, which keeps visualizerBehindOpacity. -->
+    <entry name="visualizerCompactOpacity" type="Double">
+      <default>1.0</default>
       <min>0.1</min>
       <max>1.0</max>
     </entry>

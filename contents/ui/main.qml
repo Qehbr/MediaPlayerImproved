@@ -308,6 +308,7 @@ PlasmoidItem {
 
     readonly property bool cavaRealAudio: plasmoid.configuration.visualizerUseRealAudio === true
     readonly property string cavaSource: plasmoid.configuration.visualizerCavaSource || ""
+    readonly property string cavaChannels: plasmoid.configuration.visualizerCavaChannels === "mono" ? "mono" : "stereo"
     // cava needs an even number of bars for stereo input.
     readonly property int cavaBars: {
         const wanted = plasmoid.configuration.visualizerBars || 20;
@@ -340,7 +341,7 @@ PlasmoidItem {
         root.cavaTag = "mpi" + ("00000000" + Math.floor(Math.random() * 1e9)).slice(-9);
         root.cavaOut = "/tmp/mpi-cava-" + root.cavaTag + ".dat";
         cavaCtl.connectSource("sh \"" + root.cavaHelper + "\" " + root.cavaBars + " " + root.cavaTag
-            + " \"" + root.cavaSource + "\" " + root.cavaVizId);
+            + " \"" + root.cavaSource + "\" " + root.cavaVizId + " " + root.cavaChannels);
     }
 
     function cavaStop() {
@@ -369,6 +370,7 @@ PlasmoidItem {
     }
     onCavaBarsChanged: if (root.cavaTag !== "") root.cavaStart()
     onCavaSourceChanged: if (root.cavaTag !== "") root.cavaStart()
+    onCavaChannelsChanged: if (root.cavaTag !== "") root.cavaStart()
     Component.onCompleted: if (root.cavaWanted) root.cavaStart()
     Component.onDestruction: root.cavaStop()
 

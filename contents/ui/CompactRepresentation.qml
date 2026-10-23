@@ -93,6 +93,14 @@ Loader {
     readonly property bool inPanel: [PlasmaCore.Types.TopEdge, PlasmaCore.Types.RightEdge, PlasmaCore.Types.BottomEdge, PlasmaCore.Types.LeftEdge].includes(Plasmoid.location)
     readonly property bool inTray: parent.objectName === "org.kde.desktop-CompactApplet"
 
+    // The bars' own height below or behind the text, 0 for automatic (#29).
+    readonly property int barsHeight: plasmoid.configuration.visualizerCompactHeight || 0
+    // Below the text, automatic is half the popup's bar height, cut down to
+    // whatever room the text leaves; a height of its own may be taller, the
+    // rest rising behind the text.
+    readonly property real bottomBarsHeight: barsHeight > 0 ? barsHeight : (plasmoid.configuration.visualizerHeight || 30) / 2
+    readonly property real barsOpacity: plasmoid.configuration.visualizerCompactOpacity || 1.0
+
     enum AlbumArtPresentation {
         Hide,
         Auto,
@@ -507,6 +515,7 @@ Loader {
             AudioVisualizer {
                 id: leftVisualizer
                 artColor: albumArt.artAccentColor
+                barOpacity: compactRepresentation.barsOpacity
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
@@ -549,13 +558,35 @@ Loader {
                 implicitHeight: textColumn.implicitHeight
                 implicitWidth: textColumn.implicitWidth
 
-                // Behind visualizer (rendered first, so it appears behind)
+                // Behind visualizer (rendered first, so it appears behind).
+                // Rises from the bottom, all the way up unless given a height.
                 AudioVisualizer {
                     id: behindVisualizer
                     artColor: albumArt.artAccentColor
-                    anchors.fill: parent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: compactRepresentation.barsHeight > 0 ? Math.min(compactRepresentation.barsHeight, parent.height) : parent.height
                     visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
-                    opacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
+                    barOpacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
+                }
+
+                // Visualizer at the bottom. Drawn here, behind the text, rather
+                // than in the column: the column only holds the room it takes
+                // under the text (bottomBarsSlot), and bars taller than that
+                // rise behind the text instead of pushing it out of the panel.
+                AudioVisualizer {
+                    id: bottomVisualizer
+                    artColor: albumArt.artAccentColor
+                    barOpacity: compactRepresentation.barsOpacity
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: compactRepresentation.barsHeight > 0
+                        ? Math.min(compactRepresentation.barsHeight, parent.height)
+                        : bottomBarsSlot.height
+                    visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
+                        && (compactRepresentation.barsHeight > 0 || textCell.freeHeight >= Kirigami.Units.smallSpacing)
                 }
 
                 ColumnLayout {
@@ -630,17 +661,16 @@ Loader {
                         onLoaded: item.slot = "textbottom"
                     }
 
-                    // Audio Visualizer at bottom
-                    AudioVisualizer {
-                        id: bottomVisualizer
-                        artColor: albumArt.artAccentColor
+                    // Room for the bottom visualizer under the text; the bars
+                    // themselves are bottomVisualizer, behind the column.
+                    Item {
+                        id: bottomBarsSlot
                         Layout.fillWidth: true
                         // Never taller than the room left over, so the bars
                         // stay inside the panel instead of pushing the rest of
                         // the widget out of it.
-                        Layout.preferredHeight: Math.max(0, Math.min((plasmoid.configuration.visualizerHeight || 30) / 2, textCell.freeHeight))
-                        visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "bottom"
-                            && textCell.freeHeight >= Kirigami.Units.smallSpacing
+                        Layout.preferredHeight: Math.max(0, Math.min(compactRepresentation.bottomBarsHeight, textCell.freeHeight))
+                        visible: bottomVisualizer.visible && textCell.freeHeight >= Kirigami.Units.smallSpacing
                     }
                 }
             }
@@ -660,6 +690,7 @@ Loader {
             AudioVisualizer {
                 id: rightVisualizer
                 artColor: albumArt.artAccentColor
+                barOpacity: compactRepresentation.barsOpacity
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "right")
