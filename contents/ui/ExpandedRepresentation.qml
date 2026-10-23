@@ -52,6 +52,15 @@ PlasmaExtras.Representation {
     readonly property bool overArtBackdrop: backgroundImage.visible
         && backgroundImage.width > 0 && backgroundImage.height > 0
 
+    // Where the colours taken from the artwork come from. The panel shows the
+    // same artwork and stays on screen while the popup is open, so while it
+    // has one, use its colours: two separate reads of one cover can disagree,
+    // and the popup's own read can land while its window is still coming up,
+    // leaving the previous track's colours on it (#31). Without artwork in the
+    // panel -- hidden there, or in the system tray -- read our own.
+    readonly property Item artColorSource: (root.compactArt && root.compactArt.visible && root.compactArt.hasImage)
+        ? root.compactArt : albumArt
+
     // What sits behind the track details: the blurred cover as before, a flat
     // colour taken from the cover, the theme's own background, or one picked
     // by hand.
@@ -64,7 +73,7 @@ PlasmaExtras.Representation {
     }
     readonly property bool overFlatBackground: backgroundSource === "art" || backgroundSource === "custom"
     readonly property color flatBackgroundColor: backgroundSource === "art"
-        ? albumArt.artDominantColor
+        ? artColorSource.artDominantColor
         : (plasmoid.configuration.expandedBackgroundColor || Kirigami.Theme.backgroundColor)
 
     // Whatever ends up behind the text decides what colour the text can be.
@@ -84,7 +93,7 @@ PlasmaExtras.Representation {
     readonly property color accentColor: ColorSource.resolve(
         plasmoid.configuration.accentColorSource,
         plasmoid.configuration.accentColor,
-        albumArt.artAccentColor,
+        artColorSource.artAccentColor,
         Kirigami.Theme.highlightColor)
 
     readonly property bool accentIsCustom: plasmoid.configuration.accentColorSource === "art"
@@ -94,7 +103,7 @@ PlasmaExtras.Representation {
     readonly property color progressColor: ColorSource.resolve(
         plasmoid.configuration.compactProgressColorSource,
         plasmoid.configuration.compactProgressColor,
-        albumArt.artAccentColor,
+        artColorSource.artAccentColor,
         Kirigami.Theme.highlightColor)
 
     readonly property var appletInterface: root
@@ -460,7 +469,16 @@ PlasmaExtras.Representation {
                         } else {
                             albumArt.loadAlbumArt();
                         }
+                        openedColorsTimer.restart();
                     }
+                }
+
+                // Once the popup is up, read the artwork's colours again,
+                // whichever way the artwork got there; see refreshColors().
+                Timer {
+                    id: openedColorsTimer
+                    interval: Kirigami.Units.longDuration * 2
+                    onTriggered: albumArt.refreshColors()
                 }
             }
 
@@ -980,7 +998,7 @@ PlasmaExtras.Representation {
             // Audio Visualizer in Expanded View
             AudioVisualizer {
                 id: expandedVisualizer
-                artColor: albumArt.artAccentColor
+                artColor: expandedRepresentation.artColorSource.artAccentColor
                 Layout.fillWidth: true
                 Layout.preferredHeight: plasmoid.configuration.visualizerHeight || 30
                 Layout.alignment: Qt.AlignHCenter

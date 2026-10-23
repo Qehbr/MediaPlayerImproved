@@ -45,6 +45,10 @@ PlasmoidItem {
     readonly property real maximumPlaybackRate: root.player?.maximumRate ?? 1.0
     // END model properties
 
+    // The panel's artwork, while the panel has one. The popup takes its
+    // colours from it; see artColorSource in ExpandedRepresentation.
+    property Item compactArt: null
+
     Plasmoid.icon: switch (root.playbackStatus) {
     case Mpris.PlaybackStatus.Playing:
         return "media-playback-playing-symbolic";

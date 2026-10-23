@@ -494,7 +494,13 @@ Loader {
                     }
                 }
 
-                Component.onCompleted: albumArt.loadAlbumArt()
+                Component.onCompleted: {
+                    albumArt.loadAlbumArt();
+                    root.compactArt = albumArt;
+                }
+                Component.onDestruction: if (root.compactArt === albumArt) {
+                    root.compactArt = null;
+                }
             }
 
             // Visualizer on left
