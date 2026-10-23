@@ -18,6 +18,7 @@ KCM.SimpleKCM {
     property alias cfg_hideWhenIdle: hideWhenIdle.checked
     property alias cfg_noArtworkIcon: noArtworkIcon.text
     property var cfg_ignoredPlayers: []
+    property string cfg_expandedInfoPosition: "beside"
 
     // A player is stored by its desktop entry, which stays the same between
     // runs, or by its name if it has none; the widget matches either.
@@ -129,6 +130,20 @@ KCM.SimpleKCM {
                 font: Kirigami.Theme.smallFont
                 opacity: 0.7
             }
+        }
+
+        QQC2.ComboBox {
+            Kirigami.FormData.label: i18n("Track info in popup:")
+            model: [
+                { text: i18n("Beside the artwork"), value: "beside" },
+                { text: i18n("Below the artwork"), value: "below" }
+            ]
+            textRole: "text"
+            currentIndex: configGeneral.cfg_expandedInfoPosition === "below" ? 1 : 0
+            onActivated: configGeneral.cfg_expandedInfoPosition = model[currentIndex].value
+            QQC2.ToolTip.text: i18n("Below the artwork, long titles get the popup's full width")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         QQC2.TextField {

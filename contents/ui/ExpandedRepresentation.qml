@@ -375,8 +375,11 @@ PlasmaExtras.Representation {
                     backgroundImage.width: Math.round((albumArt.albumArt.currentItem as Image).paintedWidth * backgroundImage.scaleFactor)
                     backgroundImage.height: Math.round((albumArt.albumArt.currentItem as Image).paintedHeight * backgroundImage.scaleFactor)
                     // HACK: Fix background ratio when DPI > 1
+                    // The artwork is centred in its box, both ways, so take
+                    // the source from the middle; the stock widget's right
+                    // edge only matched artwork that hugged the right side.
                     shaderEffectSource.sourceRect: Qt.rect(
-                        albumArt.albumArt.width - (albumArt.albumArt.currentItem as Image).paintedWidth,
+                        Math.round((albumArt.albumArt.width - (albumArt.albumArt.currentItem as Image).paintedWidth) / 2),
                         Math.round((albumArt.albumArt.height - (albumArt.albumArt.currentItem as Image).paintedHeight) / 2),
                         (albumArt.albumArt.currentItem as Image).paintedWidth,
                         (albumArt.albumArt.currentItem as Image).paintedHeight
@@ -391,6 +394,38 @@ PlasmaExtras.Representation {
                 fill: parent
                 leftMargin: Kirigami.Units.gridUnit
                 rightMargin: Kirigami.Units.gridUnit
+            }
+
+            // The details go beside the artwork, sharing the width with it,
+            // or under it, where a long title gets the whole width rather
+            // than half of it and wraps far less (#30).
+            states: State {
+                name: "infoBelow"
+                when: plasmoid.configuration.expandedInfoPosition === "below" && detailsColumn.visible
+
+                AnchorChanges {
+                    target: albumArt
+                    anchors.right: albumRow.right
+                    anchors.bottom: detailsColumn.top
+                }
+                AnchorChanges {
+                    target: detailsColumn
+                    anchors.top: undefined
+                    anchors.left: albumRow.left
+                }
+                PropertyChanges {
+                    albumArt.anchors.rightMargin: 0
+                    albumArt.anchors.topMargin: Kirigami.Units.gridUnit / 2
+                    albumArt.anchors.bottomMargin: Kirigami.Units.gridUnit / 2
+                    detailsColumn.anchors.leftMargin: 0
+                    detailsColumn.anchors.bottomMargin: Kirigami.Units.gridUnit / 2
+                    // Letting go of the top anchor keeps the height the two
+                    // anchors gave it, so set the column's own height instead.
+                    detailsColumn.height: detailsColumn.implicitHeight
+                    songTitle.horizontalAlignment: Text.AlignHCenter
+                    songArtist.horizontalAlignment: Text.AlignHCenter
+                    songAlbum.horizontalAlignment: Text.AlignHCenter
+                }
             }
 
             AlbumArtStackView {
@@ -477,6 +512,7 @@ PlasmaExtras.Representation {
                     Layout.maximumHeight: Kirigami.Units.gridUnit * 2
                 }
                 Kirigami.Heading { // Song Album
+                    id: songAlbum
                     color: expandedRepresentation.detailsTextColor
 
                     level: 3

@@ -36,7 +36,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 
 ### Expanded View (Popup)
 - Full album art with blurred background
-- Track title, artist, and album
+- Track title, artist, and album, beside the artwork or below it at full width
 - Seek slider with elapsed/remaining time
 - Playback rate selector (0.25×–2.0×)
 - Shuffle and repeat controls
@@ -123,6 +123,7 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | Volume step | 5% | How much each scroll tick changes volume (1–20%) |
 | Hide when idle | Disabled | Hide the widget entirely when nothing is playing |
 | Ignored players | None | Players left out as if they weren't running: not shown, no popup tab, and they don't keep a hidden-when-idle widget visible. Pick from the players currently running |
+| Track info in popup | Beside the artwork | Title, artist and album beside the artwork, or below it, where long titles get the popup's full width |
 | No-artwork icon | `applications-multimedia` | Icon shown when a track has no album art |
 
 ### Compact View

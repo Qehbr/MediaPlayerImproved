@@ -30,6 +30,10 @@
     <entry name="noArtworkIcon" type="String">
       <default>applications-multimedia</default>
     </entry>
+    <!-- beside | below the artwork, for the popup's title, artist and album. -->
+    <entry name="expandedInfoPosition" type="String">
+      <default>beside</default>
+    </entry>
     <entry name="enableScrollingText" type="Bool">
       <default>true</default>
     </entry>
