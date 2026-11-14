@@ -13,6 +13,11 @@ import "../code/colorsource.js" as ColorSource
 Item {
     id: visualizer
 
+    // An exact number of bars and gap between them, set by whoever places the
+    // visualizer; 0 and -1 leave them automatic.
+    property int fixedBarCount: 0
+    property int fixedSpacing: -1
+
     property int maxBarCount: plasmoid.configuration.visualizerBars || 20
     property int rawBarCount: {
         // Calculate how many bars can actually fit in the available width
@@ -22,8 +27,23 @@ Item {
         return Math.min(maxBarCount, Math.max(5, maxBars))
     }
     // Kept even so cava's stereo output, the left channel's bars then the
-    // right's, still splits down the middle once averaged down.
-    readonly property int barCount: Math.max(4, rawBarCount - (rawBarCount % 2))
+    // right's, still splits down the middle once averaged down. A count set by
+    // hand is kept as it is, odd or not -- an odd one just averages the two
+    // channels' bass into the middle bar -- except that it never asks for
+    // more bars than fit at a pixel each: where the width is not the
+    // visualizer's own, under a short title, more would be cut off at the
+    // edge, losing that end of the spectrum, rather than averaged in.
+    readonly property int barCount: {
+        if (visualizer.fixedBarCount > 0) {
+            const gap = visualizer.fixedSpacing >= 0 ? visualizer.fixedSpacing : 2;
+            const fit = Math.floor((visualizer.width + gap) / (1 + gap));
+            return Math.max(1, Math.min(visualizer.fixedBarCount, fit));
+        }
+        return Math.max(4, rawBarCount - (rawBarCount % 2));
+    }
+    readonly property real barSpacing: visualizer.fixedSpacing >= 0
+        ? visualizer.fixedSpacing
+        : Math.max(2, Math.min(visualizer.width / (visualizer.barCount * 3), 5))
 
     property bool isPlaying: root.isPlaying
 
@@ -100,14 +120,17 @@ Item {
 
     Row {
         anchors.fill: parent
-        spacing: Math.max(2, Math.min(parent.width / (visualizer.barCount * 3), 5))
+        spacing: visualizer.barSpacing
+        // More bars, or wider gaps, than the room allows would otherwise
+        // spill past the visualizer onto its neighbours.
+        clip: true
 
         Repeater {
             model: visualizer.barCount
 
             Rectangle {
                 id: bar
-                width: Math.max(2, (visualizer.width - (visualizer.barCount - 1) * parent.spacing) / visualizer.barCount)
+                width: Math.max(1, (visualizer.width - (visualizer.barCount - 1) * parent.spacing) / visualizer.barCount)
                 height: visualizer.height
                 color: "transparent"
 

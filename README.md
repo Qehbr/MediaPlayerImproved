@@ -17,6 +17,7 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - Bar color from the theme, the album art, or a color picker
 - "Behind" mode renders bars beneath the text with adjustable opacity for a subtle depth effect
 - The panel's bars have their own height and opacity: at the bottom they can rise behind the text instead of squeezing under it
+- The panel's bars can have their own count and spacing; left or right of the track they then keep a fixed width, like the artwork and buttons
 - Real audio in stereo (mirrored, bass in the middle) or mono (bass to treble, left to right)
 - Bars fade when paused and animate smoothly when playing
 
@@ -157,11 +158,13 @@ Right-click the widget → **Configure Media Player Improved** to open the setti
 | cava channels | Stereo | Stereo mirrors the channels with the bass in the middle; mono runs bass to treble from left to right |
 | Show in compact view | Enabled | Visualizer in the panel widget |
 | Position (compact) | Bottom | Bottom / Left / Right / Behind |
-| Compact height | Automatic | Height of the bars at the bottom or behind the text. At the bottom, bars taller than the room under the text rise behind it; behind the text, how far up they reach |
+| Compact height | Automatic | Height of the panel's bars. At the bottom, bars taller than the room under the text rise behind it; behind the text, how far up they reach; left or right, their height, centred |
+| Compact bars | Automatic | How many bars the panel shows, apart from the popup's. Left or right of the track, the visualizer is as wide as its bars need |
+| Compact bar spacing | Automatic | Gap between the panel's bars (0–16 px) |
 | Compact opacity | 100% (30% behind text) | Opacity of the panel's bars (10–100%). Behind the text keeps a value of its own |
 | Show in expanded view | Enabled | Visualizer in the popup |
 | Height | 30 px | Bar height in pixels (10–100) |
-| Number of bars | 20 | Bar count (5–50) |
+| Number of bars | 20 | Bars in the popup (5–50), and the most the panel fits while its own count is automatic |
 
 ### Colors
 Each of these can follow the theme, the album art, or a color you pick. Album art colors are

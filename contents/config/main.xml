@@ -194,5 +194,18 @@
       <min>0.1</min>
       <max>1.0</max>
     </entry>
+    <!-- How many bars the compact view shows; 0 for automatic, as many as fit,
+         up to visualizerBars. -->
+    <entry name="visualizerCompactBars" type="Int">
+      <default>0</default>
+      <min>0</min>
+      <max>64</max>
+    </entry>
+    <!-- Gap between the compact view's bars in pixels; -1 for automatic. -->
+    <entry name="visualizerCompactSpacing" type="Int">
+      <default>-1</default>
+      <min>-1</min>
+      <max>16</max>
+    </entry>
   </group>
 </kcfg>

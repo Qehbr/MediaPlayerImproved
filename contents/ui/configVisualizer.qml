@@ -22,6 +22,8 @@ KCM.SimpleKCM {
     property real cfg_visualizerBehindOpacity
     property real cfg_visualizerCompactOpacity
     property alias cfg_visualizerCompactHeight: visualizerCompactHeight.value
+    property alias cfg_visualizerCompactBars: visualizerCompactBars.value
+    property alias cfg_visualizerCompactSpacing: visualizerCompactSpacing.value
     property string cfg_visualizerCavaChannels
     property alias cfg_visualizerInExpanded: visualizerInExpanded.checked
     property alias cfg_visualizerHeight: visualizerHeight.value
@@ -128,15 +130,40 @@ KCM.SimpleKCM {
             id: visualizerCompactHeight
             Kirigami.FormData.label: i18n("Compact height:")
             enabled: enableVisualizer.checked && visualizerInCompact.checked
-                && (configVisualizer.cfg_visualizerPositionCompact === "bottom" || configVisualizer.cfg_visualizerPositionCompact === "behind")
             from: 0
             to: 200
             stepSize: 2
             textFromValue: (value, locale) => value === 0 ? i18n("Automatic") : i18n("%1 px", value)
             valueFromText: (text, locale) => parseInt(text) || 0
-            QQC2.ToolTip.text: i18n("At the bottom, bars taller than the room under the text rise behind it. Behind the text, how far up the bars reach.")
+            QQC2.ToolTip.text: i18n("At the bottom, bars taller than the room under the text rise behind it. Behind the text, how far up the bars reach. Left or right, the bars' height, centred in the panel.")
             QQC2.ToolTip.visible: hovered
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+
+        QQC2.SpinBox {
+            id: visualizerCompactBars
+            Kirigami.FormData.label: i18n("Compact bars:")
+            enabled: enableVisualizer.checked && visualizerInCompact.checked
+            from: 0
+            to: 64
+            textFromValue: (value, locale) => value === 0 ? i18n("Automatic") : String(value)
+            valueFromText: (text, locale) => parseInt(text) || 0
+            QQC2.ToolTip.text: i18n("How many bars the panel shows, apart from the popup's. Automatic fits as many as there is room for. Left or right, the visualizer is as wide as its bars need.")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+
+        QQC2.SpinBox {
+            id: visualizerCompactSpacing
+            Kirigami.FormData.label: i18n("Compact bar spacing:")
+            enabled: enableVisualizer.checked && visualizerInCompact.checked
+            from: -1
+            to: 16
+            textFromValue: (value, locale) => value < 0 ? i18n("Automatic") : i18n("%1 px", value)
+            valueFromText: (text, locale) => {
+                const n = parseInt(text);
+                return isNaN(n) ? -1 : n;
+            }
         }
 
         QQC2.Slider {
@@ -193,6 +220,9 @@ KCM.SimpleKCM {
             from: 5
             to: 50
             stepSize: 5
+            QQC2.ToolTip.text: i18n("Bars in the popup, and the most the panel fits while its own count is automatic")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
         QQC2.Label {

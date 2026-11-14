@@ -100,6 +100,15 @@ Loader {
     // rest rising behind the text.
     readonly property real bottomBarsHeight: barsHeight > 0 ? barsHeight : (plasmoid.configuration.visualizerHeight || 30) / 2
     readonly property real barsOpacity: plasmoid.configuration.visualizerCompactOpacity || 1.0
+    // An exact number of bars and gap between them, 0 and -1 for automatic.
+    readonly property int barsCount: plasmoid.configuration.visualizerCompactBars || 0
+    readonly property int barsSpacing: plasmoid.configuration.visualizerCompactSpacing ?? -1
+    // Beside the track the bars are sized like the artwork and the buttons:
+    // a set number of bars takes the room it needs, leaving the title the
+    // only part that stretches (#34). Automatic keeps the old 30px.
+    readonly property real sideBarsWidth: barsCount > 0
+        ? barsCount * 4 + (barsCount - 1) * (barsSpacing >= 0 ? barsSpacing : 2)
+        : 30
 
     enum AlbumArtPresentation {
         Hide,
@@ -516,8 +525,14 @@ Loader {
                 id: leftVisualizer
                 artColor: albumArt.artAccentColor
                 barOpacity: compactRepresentation.barsOpacity
-                Layout.preferredWidth: 30
-                Layout.fillHeight: true
+                fixedBarCount: compactRepresentation.barsCount
+                fixedSpacing: compactRepresentation.barsSpacing
+                Layout.preferredWidth: compactRepresentation.sideBarsWidth
+                // The panel's height unless given one of their own.
+                Layout.fillHeight: compactRepresentation.barsHeight <= 0
+                Layout.preferredHeight: compactRepresentation.barsHeight > 0 ? compactRepresentation.barsHeight : -1
+                Layout.maximumHeight: compactRepresentation.barsHeight > 0 ? compactRepresentation.height : Number.POSITIVE_INFINITY
+                Layout.alignment: Qt.AlignVCenter
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "left")
             }
 
@@ -569,6 +584,8 @@ Loader {
                     height: compactRepresentation.barsHeight > 0 ? Math.min(compactRepresentation.barsHeight, parent.height) : parent.height
                     visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && plasmoid.configuration.visualizerPositionCompact === "behind"
                     barOpacity: plasmoid.configuration.visualizerBehindOpacity || 0.3
+                    fixedBarCount: compactRepresentation.barsCount
+                    fixedSpacing: compactRepresentation.barsSpacing
                 }
 
                 // Visualizer at the bottom. Drawn here, behind the text, rather
@@ -579,6 +596,8 @@ Loader {
                     id: bottomVisualizer
                     artColor: albumArt.artAccentColor
                     barOpacity: compactRepresentation.barsOpacity
+                    fixedBarCount: compactRepresentation.barsCount
+                    fixedSpacing: compactRepresentation.barsSpacing
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
@@ -691,8 +710,14 @@ Loader {
                 id: rightVisualizer
                 artColor: albumArt.artAccentColor
                 barOpacity: compactRepresentation.barsOpacity
-                Layout.preferredWidth: 30
-                Layout.fillHeight: true
+                fixedBarCount: compactRepresentation.barsCount
+                fixedSpacing: compactRepresentation.barsSpacing
+                Layout.preferredWidth: compactRepresentation.sideBarsWidth
+                // The panel's height unless given one of their own.
+                Layout.fillHeight: compactRepresentation.barsHeight <= 0
+                Layout.preferredHeight: compactRepresentation.barsHeight > 0 ? compactRepresentation.barsHeight : -1
+                Layout.maximumHeight: compactRepresentation.barsHeight > 0 ? compactRepresentation.height : Number.POSITIVE_INFINITY
+                Layout.alignment: Qt.AlignVCenter
                 visible: (plasmoid.configuration.enableVisualizer !== false) && (plasmoid.configuration.visualizerInCompact !== false) && (plasmoid.configuration.visualizerPositionCompact === "right")
             }
 
