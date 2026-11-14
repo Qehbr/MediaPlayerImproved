@@ -309,9 +309,12 @@ PlasmoidItem {
     readonly property bool cavaRealAudio: plasmoid.configuration.visualizerUseRealAudio === true
     readonly property string cavaSource: plasmoid.configuration.visualizerCavaSource || ""
     readonly property string cavaChannels: plasmoid.configuration.visualizerCavaChannels === "mono" ? "mono" : "stereo"
-    // cava needs an even number of bars for stereo input.
+    // As many bars as any visualizer shows, the popup's or a count set for the
+    // panel, so neither has to stretch fewer bars across more. cava needs an
+    // even number of bars for stereo input.
     readonly property int cavaBars: {
-        const wanted = plasmoid.configuration.visualizerBars || 20;
+        const wanted = Math.max(plasmoid.configuration.visualizerBars || 20,
+                                plasmoid.configuration.visualizerCompactBars || 0);
         return Math.max(4, wanted - (wanted % 2));
     }
     // Some visualizer is actually being drawn: the panel's whenever it is
