@@ -116,8 +116,8 @@ Item {
             // When a parent loader is inactive, it'll drop the engine from the context, but this can still run
             // afterwards which causes a crash in QQuickStackElement::initialize which asserts the engine is not null.
             // This visiblity heuristic is always the case when we're in this state, returning without pushing
-            // anything to the StackView and avoiding the above. Since the artwork is always updated when expanding,
-            // we don't have to worry about not being visible due to other reasons.
+            // anything to the StackView and avoiding the above. If this is a temporarily hidden panel,
+            // onVisibleChanged retries loading when the StackView becomes visible again.
             if (!albumArt.visible) {
                 return;
             }
@@ -168,6 +168,12 @@ Item {
         id: albumArt
 
         anchors.fill: parent
+
+        onVisibleChanged: {
+            if (visible && container.pendingImage !== null) {
+                container.loadAlbumArt();
+            }
+        }
 
         readonly property string icon: root.iconName || plasmoid.configuration.noArtworkIcon || "applications-multimedia"
 
@@ -237,12 +243,14 @@ Item {
                 // the moment the artwork is swapped in (e.g. Spotify delivers its
                 // art during shell startup), the opacity enter-transition is skipped
                 // and the image stays invisible — a blank square. If it hasn't faded
-                // in shortly after loading, force it visible.
+                // in shortly after loading, force it visible, but only after the
+                // StackView has adopted and sized it. A pending image still has
+                // its natural size and must stay hidden.
                 onStatusChanged: if (status === Image.Ready) opacityFixTimer.restart()
                 Timer {
                     id: opacityFixTimer
                     interval: Kirigami.Units.longDuration + 50
-                    onTriggered: if (albumArtImage.opacity < 1) {
+                    onTriggered: if (albumArt.currentItem === albumArtImage && albumArtImage.opacity < 1) {
                         albumArtImage.opacity = 1;
                     }
                 }
