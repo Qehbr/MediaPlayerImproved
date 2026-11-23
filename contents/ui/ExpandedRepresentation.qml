@@ -1053,6 +1053,7 @@ PlasmaExtras.Representation {
                 id: playerList
                 model: mpris2Model
                 delegate: PlasmaComponents3.TabButton {
+                    id: playerTab
                     required property string iconName
                     required property string desktopEntry
                     required property bool isMultiplexer
@@ -1069,12 +1070,14 @@ PlasmaExtras.Representation {
                     anchors.bottom: parent?.bottom
                     implicitWidth: 1 // HACK: suppress binding loop warnings
                     display: PlasmaComponents3.AbstractButton.IconOnly
-                    // The MPRIS model falls back to "emblem-music-symbolic" when it
-                    // can't read the player's desktop file. In that case derive the
-                    // icon from the desktop-entry id (e.g. "spotify", "librewolf"),
-                    // which resolves to the real application icon.
-                    icon.name: (iconName === "emblem-music-symbolic" && desktopEntry.length > 0) ? desktopEntry : iconName
-                    icon.height: Kirigami.Units.iconSizes.smallMedium
+                    contentItem: PlayerIcon {
+                        modelIconName: playerTab.iconName
+                        desktopEntry: playerTab.desktopEntry
+                        identity: playerTab.identity
+                        isMultiplexer: playerTab.isMultiplexer
+                        active: playerTab.visualFocus
+                        refreshEnabled: root.expanded && playerTab.shown
+                    }
                     text: isMultiplexer ? i18nc("@action:button", "Choose player automatically") : identity
                     // Keep the delegate centered by offsetting the padding removed in the parent
                     bottomPadding: verticalPadding + headerItem.bottomPadding
