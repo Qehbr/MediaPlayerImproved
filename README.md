@@ -44,6 +44,11 @@ Works with any MPRIS2-compatible media player (Spotify, VLC, Firefox, MPV, Rhyth
 - Playback rate selector (0.25×–2.0×)
 - Shuffle and repeat controls
 - Multi-player tab bar when more than one MPRIS2 player is active
+- KDE Connect tabs look up the remote app's name in the desktop icon theme and
+  add a small themed KDE Connect badge. Theme inheritance is respected, and
+  missing icons are retried while the popup is open. No artwork is bundled or
+  downloaded by the widget. KDE Connect supplies an unescaped `App - Device`
+  label, so app names containing ` - ` are interpreted using the first segment.
 - Keyboard shortcuts and touch/swipe gestures
 
 ### Compact View (Panel)
