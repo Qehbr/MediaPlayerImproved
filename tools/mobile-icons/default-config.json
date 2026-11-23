@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "applications": {
+    "newpipe": {"android_package": "org.schabi.newpipe", "apple_authors": ["Team NewPipe"]},
+    "auxio": {"android_package": "org.oxycblt.auxio", "apple_authors": ["Alexander Capehart", "OxygenCobalt"]}
+  }
+}
